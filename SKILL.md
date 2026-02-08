@@ -80,76 +80,100 @@ Parse the OpenAPI specification to automatically extract:
 **From `servers`:**
 - Base URLs for different environments (production, sandbox)
 
-### Step 3: Gather Missing API-Specific Details
+### Step 3: Determine Global vs. Per-Endpoint Patterns
 
-**IMPORTANT FLOW:**
-1. After parsing the OpenAPI spec, **ASK the user questions** about missing details
-2. **WAIT for the user to provide answers** - do NOT proceed until you have responses
-3. **ONLY after receiving all answers**, acknowledge with "Thank you for providing those details" or similar
-4. **THEN** proceed to create the skill
+**IMPORTANT: First, ask which aspects vary per endpoint vs. are global across all endpoints.**
 
-Do NOT say "Perfect!" or "Great!" or start creating the skill before the user has answered your questions.
+After parsing the OpenAPI spec, ask the user:
+
+```
+I've found [N] endpoints in your OpenAPI spec. Before creating the endpoint files,
+I need to understand which aspects are consistent across all endpoints vs. which vary per endpoint.
+
+Please tell me which of these aspects vary by endpoint:
+
+1. **Authentication:** Same for all endpoints, or varies per endpoint?
+2. **Error format:** Same for all endpoints, or varies per endpoint?
+3. **Rate limits:** Same for all endpoints, or varies per endpoint?
+4. **Retry strategy:** Same for all endpoints, or varies per endpoint?
+
+For aspects that are "same for all", I'll create a shared reference.
+For aspects that "vary", I'll ask endpoint-specific questions.
+```
+
+**[WAIT FOR USER RESPONSE]**
 
 ---
 
-With the OpenAPI spec parsed, collect additional details that are typically not in specifications:
+### Step 4: Gather API-Specific Details
+
+Based on the user's response, collect details:
+
+**For GLOBAL aspects (same across all endpoints), ask once:**
 
 **Authentication (if not fully defined in spec):**
 - ✓ _Authentication method_ — Auto-extracted from `securitySchemes` if present
 - ✓ _Header/parameter names_ — Auto-extracted from `securitySchemes` if present
 - ✗ What environment variables should developers set? (e.g., `YOUR_API_KEY`, `API_BASE_URL`)
 - ✗ What endpoint can developers call to verify credentials work? (e.g., `/v1/me`, `/v1/health`)
-- ✗ What does an auth failure response look like? (specific example with error codes)
 
-**Errors:**
+**Errors (if global):**
 - ✓ _Error response format_ — Auto-extracted from 4xx/5xx response schemas if defined
-- ✓ _Status codes_ — Auto-extracted from operation responses if defined
 - ✗ Which errors are retryable? Which indicate a permanent failure?
-- ✗ What does each error code mean in practice? (business context, not just HTTP status)
+- ✗ Retry strategy: exponential backoff details (initial delay, max retries)
 
-**Rate limits:**
+**Rate limits (if global):**
 - ✗ What are your per-minute and burst limits?
 - ✗ What headers indicate rate limit status? (e.g., `X-RateLimit-Remaining`)
-- ✗ What does a 429 response look like? (specific example)
 - ✗ Does your API send `Retry-After` headers?
 
-**Idempotency:**
-- ✗ Does your API support idempotency keys?
-- ✗ Which operations require them?
-- ✗ What is the idempotency window? (e.g., 24 hours)
-- ✗ What header or parameter carries the key? (e.g., `Idempotency-Key` header)
+**Timeouts (if global):**
+- ✗ What are recommended timeout values? (e.g., 30s for all operations)
 
-**Webhooks:**
-- ✗ What signature algorithm do you use? (e.g., HMAC-SHA256)
-- ✗ What header contains the signature? (e.g., `X-Webhook-Signature`)
-- ✗ What is the expected response time? (e.g., respond within 5 seconds)
-- ✗ What is your retry policy? (e.g., 3 retries with exponential backoff)
-
-**Pagination:**
+**Pagination (if applicable):**
 - ✓ _Pagination style_ — Infer from response schemas if fields like `cursor`, `next`, `offset`, or `page` are present
 - ✗ What fields indicate more results exist? (e.g., `has_more`, `next_cursor`)
-- ✗ What is the maximum page size?
 
-**Timeouts:**
-- ✗ What are recommended timeout values for different operation types? (e.g., 30s for reads, 60s for writes)
+**For PER-ENDPOINT aspects (vary by endpoint), ask for each endpoint:**
+
+For each endpoint that varies, ask:
+- "For [METHOD /path], what is the specific [error format/rate limit/retry strategy]?"
+
+**For ALL endpoints, always ask:**
+- Does this endpoint require idempotency? If yes, what header and window?
+- What are the required fields (always required)?
+- What are context-dependent fields (required for EMEA, Enterprise, specific use cases)?
 
 ---
 
-**Example conversation flow:**
+**IMPORTANT FLOW:**
+1. Ask which aspects vary (Step 3)
+2. **WAIT for user response**
+3. Ask detailed questions (Step 4)
+4. **WAIT for user to provide all answers**
+5. **ONLY after receiving all answers**, acknowledge with "Thank you for providing those details"
+6. **THEN** proceed to create the skill files
+
+Do NOT say "Perfect!" or "Great!" or start creating files before the user has answered your questions.
+### Step 5: Create the Skill Files
+
+Create a directory structure with the main skill file and per-endpoint files:
 
 ```
-Assistant: I've analyzed the OpenAPI spec for your API. I can see the authentication
-methods and endpoints, but I need some additional information. Let me ask you about:
+[your-api]-best-practices/
+  SKILL.md                    (main orchestrator)
+  endpoints/
+    POST-v1-payment-intents.md
+    POST-v1-customers.md
+    GET-v1-customers-{id}.md
+    ... (one file per endpoint)
+```
 
-1. **Rate limits:** What are your per-minute and burst limits?
-2. **Idempotency:** Which operations require idempotency keys?
-3. **Retry strategy:** Which errors should be retried?
+---
 
-Please provide these details so I can create a comprehensive best practice skill.
+**File 1: SKILL.md (Main Orchestrator)**
 
-[WAIT FOR USER RESPONSE - DO NOT CONTINUE]
-
-User: [provides answers]
+```markdown
 ---
 name: [your-api]-best-practices
 description: "Best practices for integrating with [Your API]. Use when: implementing [Your API] integration, handling [Your API] errors, setting up [Your API] webhooks, troubleshooting [Your API] issues."
@@ -159,457 +183,281 @@ description: "Best practices for integrating with [Your API]. Use when: implemen
 
 ## How to Use This Skill
 
-**Before proceeding, you MUST provide one of the following:**
-
-1. **Copy/paste your API request** in the format your code uses (curl, HTTP, language-specific client)
-2. **Upload a file** containing your API integration code
-3. **Copy/paste the code** that generates your API request
-
-This allows the skill to compare your implementation against best practices and identify specific issues.
-
-**Important Constraints:**
-- This skill uses **ONLY the authoritative best practices defined below** - it will NOT search the web or external documentation
-- All validation rules come from the official API specification and internal best practices documented in this skill
-- If you need information not covered in this skill, the skill will ask for your permission before looking elsewhere
-- This ensures accuracy and prevents incorrect or outdated external information from being used
-
-**Example formats accepted:**
-
-```bash
-# Curl format
-curl -X POST "https://api.example.com/v1/orders" \
-  -H "Authorization: Bearer sk_test_123" \
-  -d '{"amount": 1000}'
-```
-
-```python
-# Python code
-import requests
-
-response = requests.post(
-    "https://api.example.com/v1/orders",
-    headers={"Authorization": f"Bearer {api_key}"},
-    json={"amount": 1000}
-)
-```
-
-```javascript
-// JavaScript/Node.js code
-fetch('https://api.example.com/v1/orders', {
-  method: 'POST',
-  headers: {
-    'Authorization': `Bearer ${apiKey}`,
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({ amount: 1000 })
-});
-```
-
-Without your actual implementation, this skill can only provide general guidance. With it, the skill will analyze your code and provide specific feedback:
-
-**What the skill will check:**
-- ✗ **Missing authentication headers** → Show exactly what header/value to add
-- ✗ **Missing required or context-dependent fields** → Identify which fields are missing for your use case
-- ✗ **Incorrect error handling** → Point out which status codes aren't handled and how to handle them
-- ✗ **Missing retry logic** → Show which errors should be retried and the backoff strategy to use
-- ✗ **Missing idempotency keys** → Identify operations that need idempotency keys
-- ✗ **Rate limiting issues** → Flag missing rate limit detection/handling
-- ✗ **Incorrect timeout values** → Recommend appropriate timeout values for your operations
-
-**Output format:**
-For each issue found, the skill will provide:
-1. **What's wrong** - Specific issue in your implementation
-2. **Why it matters** - Consequence of not fixing it
-3. **How to fix** - Exact change needed (code snippet or specific value)
-
-**Important:** These are recommendations, not requirements. You may have valid reasons to deviate (e.g., handling at a different layer, testing environment, architectural constraints). The skill provides information so you can make informed decisions. If you choose to ignore a recommendation, that's acceptable - just ensure you understand the implications.
-
----
-
-## Analysis Process
-
-**When user provides their code, follow this process:**
-
-1. **Identify input type** - Determine what the user provided:
-   - **Single API request** (curl, JSON, single HTTP request) → Validate request structure only
-   - **Code implementation** (Python, JavaScript, etc. with logic) → Validate request + error handling + retry logic
-
-2. **Adjust validation scope based on input type:**
-
-   **For single API requests (curl, JSON, raw HTTP):**
-   - ✅ Check: Authentication headers, required fields, idempotency headers, request format
-   - ✗ Skip: Error handling, retry logic, pagination loops, timeout configuration
-   - Rationale: User is validating a single request, not complete integration code
-
-   **For code implementations (full integration code):**
-   - ✅ Check: Everything - authentication, error handling, retry logic, pagination, timeouts, etc.
-   - Rationale: User is providing complete implementation that should handle all scenarios
-
-3. **Parse the input** - Identify endpoints called, HTTP methods, headers, error handling (if applicable), etc.
-
-4. **Run applicable validation checks** - Go through relevant ☐ checks based on input type
-
-5. **For each applicable check:**
-   - Determine if the code violates the rule
-   - If YES → Document the violation using ⚠️ Issue/Why/Recommendation format
-   - If NO → Continue to next check
-
-6. **Report ALL violations found** - List every issue found, don't skip or summarize
-
-7. **Provide summary** - At the end, summarize total violations by category
-
-**Do NOT skip validation checks within the applicable scope, even if you find many violations.**
-
-**If user says they want to ignore a recommendation:**
-- Acknowledge their decision
-- Optionally ask if they want you to document the reasoning (for team context)
-- Do NOT repeatedly warn about the same issue
-- Move on to analyzing other aspects of their code
-
-## Validation Rules
-
-**EXECUTION REQUIREMENTS:**
-1. **You MUST run ALL validation checks listed below** - do not skip any checks
-2. **For EACH check, analyze the user's code** and determine if it violates the rule
-3. **Report ALL violations found** - even if there are many issues
-4. **Use the exact "Issue/Why/Fix" format** shown below for each violation
-
-**IMPORTANT CONSTRAINTS:**
-- Only validate against the rules explicitly defined below
-- If user code involves endpoints/fields not documented here, inform the user that validation is limited to documented best practices
-- DO NOT search the web, make assumptions, or provide generic advice
-
-**IMPORTANT PHILOSOPHY:**
-- These are **recommendations**, not hard requirements
-- Report all findings, but respect user decisions to deviate
-- Users may have valid architectural reasons to ignore recommendations
-- If user acknowledges a finding and chooses to proceed, respect that decision
-- Focus on providing information so users can make informed choices
-
----
-
-### MANDATORY VALIDATION CHECKLIST
-
-**IMPORTANT:** The checks below are categorized by input type. Only run checks applicable to what the user provided.
-
-**Legend:**
-- 🔍 **Request-level checks** - Apply to both single requests AND full code
-- 💻 **Code-level checks** - Only apply to full code implementations (skip for single curl/JSON requests)
-
----
-
-### ☐ Authentication (REQUIRED CHECK - 🔍 Request-level)
-
-**MUST check for ALL of the following:**
-- ✗ Missing Authorization header → **Issue found**: Add `Authorization: Bearer {api_key}`
-- ✗ Hardcoded credentials in code → **Issue found**: Move to environment variables: `$YOUR_API_KEY`
-- ✗ Using test keys in production → **Issue found**: Use production keys from environment
-- ✗ No auth error handling (401/403) → **Issue found**: Add error handling for auth failures
-
-**Example finding report:**
-```
-⚠️  Issue: Missing Authorization header
-Why: API requests will fail with 401 Unauthorized
-Recommendation: Add this header to your request:
-  headers: {"Authorization": f"Bearer {YOUR_API_KEY}"}
-
-(If you're handling auth elsewhere or have a specific reason for this, you can acknowledge and proceed)
-```
-
-### ☐ Error Handling (REQUIRED CHECK - 💻 Code-level only)
-
-**Only check if user provided full code implementation (skip for single curl/JSON requests):**
-- ✗ Not checking response status codes → **Issue found**: Should check status before parsing
-- ✗ Missing retryable error handling (5xx, 429) → **Issue found**: Should handle retryable errors
-- ✗ Missing non-retryable error handling (4xx) → **Issue found**: Should handle client errors
-- ✗ Not parsing error response format → **Issue found**: Should parse API error format
-
-For each issue, specify the exact status code, whether it's retryable, and the API's error response format.
-
-### ☐ Retry Logic (REQUIRED CHECK - 💻 Code-level only)
-
-**Only check if user provided full code implementation (skip for single curl/JSON requests):**
-- ✗ No retry logic for transient errors (5xx, 429, timeouts) → **Issue found**: Recommend implementing retry
-- ✗ Missing exponential backoff → **Issue found**: Recommend exponential backoff (not fixed delay)
-- ✗ Not respecting Retry-After headers → **Issue found**: Should check and respect Retry-After
-- ✗ Retrying non-retryable errors (4xx) → **Issue found**: Should not retry client errors
-
-For each issue, provide the specific retry strategy for this API.
-
-### ☐ Rate Limiting (REQUIRED CHECK - 💻 Code-level only)
-
-**Only check if user provided full code implementation (skip for single curl/JSON requests):**
-- ✗ No rate limit detection (checking for 429) → **Issue found**: Should detect 429 status
-- ✗ Not reading rate limit headers → **Issue found**: Should read X-RateLimit-Remaining (or API-specific headers)
-- ✗ Missing backoff when rate limited → **Issue found**: Should implement backoff strategy
-- ✗ Not respecting Retry-After header → **Issue found**: Should wait for Retry-After duration
-
-For each issue, specify this API's rate limits and header names.
-
-### ☐ Idempotency (REQUIRED CHECK - 🔍 Request-level)
-
-**If user request is POST/PATCH to endpoints that require idempotency, you MUST check:**
-- ✗ Missing idempotency key on required operations → **Issue found**: Should include idempotency key header
-- ✗ Reusing idempotency keys across different requests → **Issue found**: Should generate unique keys per operation
-- ✗ Not generating unique keys properly → **Issue found**: Should use proper unique ID generation (UUID, etc.)
-
-**First, identify which endpoints require idempotency (list them explicitly in the skill).** Then check if user code calls those endpoints. If yes, validate idempotency key usage.
-
-For each issue, specify which operations require keys, the header name, and the idempotency window.
-
-### ☐ Timeouts (REQUIRED CHECK - 💻 Code-level only)
-
-**Only check if user provided full code implementation (skip for single curl/JSON requests):**
-- ✗ No timeout set → **Issue found**: Should set timeout (code may hang indefinitely otherwise)
-- ✗ Timeout too short for operation → **Issue found**: Should use appropriate timeout (specify recommended values)
-- ✗ Same timeout for all operations → **Issue found**: Consider different timeouts by operation type
-
-For each issue, provide recommended timeout values by operation type for this API.
-
-### ☐ Webhooks (REQUIRED CHECK - 💻 Code-level only, if user code receives webhooks)
-
-**Only check if user provided webhook handler code (skip for single curl/JSON requests):**
-- ✗ Not verifying webhook signatures → **Issue found**: Recommend verifying signatures for security
-- ✗ Not responding within expected time → **Issue found**: Should respond within X seconds
-- ✗ Not handling retries properly → **Issue found**: Should implement proper retry handling
-
-### ☐ Pagination (REQUIRED CHECK - 💻 Code-level only, if user code fetches list endpoints)
-
-**Only check if user provided code with pagination logic (skip for single curl/JSON requests):**
-- ✗ Only fetching first page → **Issue found**: Should iterate through all pages
-- ✗ Not checking for more results → **Issue found**: Should check has_more/next_cursor field
-- ✗ Incorrect pagination parameter usage → **Issue found**: Should use correct pagination fields
-
-### ☐ Required Fields by Context (REQUIRED CHECK - 🔍 Request-level)
-
-**Check if user request is missing optional-but-required fields based on:**
-
-**By use case:**
-- Identify what operation user is implementing
-- Check if optional fields are required for that use case
-- **Issue found**: If required field missing, report it with context
-
-**By customer segment (enterprise, SMB):**
-- Look for indicators of customer segment in code/context
-- Check if segment-specific fields are included
-- **Issue found**: If required field missing, report it with reasoning
-
-**By region (EMEA, India, Brazil):**
-- Look for region indicators (customer data, addresses, etc.)
-- Check if region-specific fields are included
-- **Issue found**: If required field missing, report it (e.g., GDPR consent for EMEA)
-
-**By operation variant (payment method, shipping type, etc.):**
-- Identify which variant is being used
-- Check if variant-specific fields are included
-- **Issue found**: If required field missing, report it with variant context
-
-For each missing field, explain what context makes it required, potential consequences, and how to include it. Users may have valid reasons for different implementations.
-
----
-
-### Validation Scope Examples
-
-**Example 1: Single curl request**
-```bash
-curl -X POST "https://api.example.com/v1/orders" \
-  -H "Authorization: Bearer sk_test_123" \
-  -d '{"amount": 1000}'
-```
-✅ Will check: Auth header, required fields, idempotency header (for POST)
-✗ Will NOT check: Error handling, retry logic, timeouts (user isn't providing code)
-
-**Example 2: Full Python implementation**
-```python
-def create_order(amount):
-    response = requests.post(
-        "https://api.example.com/v1/orders",
-        headers={"Authorization": f"Bearer {api_key}"},
-        json={"amount": amount}
-    )
-    return response.json()
-```
-✅ Will check: Auth header, required fields, idempotency header, error handling, retry logic, timeouts
-(Full implementation should handle all scenarios)
-
-### Common Mistakes
-[List your API's most common integration mistakes with specific detection rules]
-```
-
-### Step 5: Write Analysis Logic
-
-For each best practice section, document how to analyze user code:
-
-**Pattern matching approach:**
-- Look for specific patterns in the code (header names, error handling blocks, retry loops)
-- Check for presence/absence of required elements
-- Validate values against your API's requirements
-
-**Feedback format:**
-For every issue found, provide:
-```
-⚠️  Issue: [Specific problem in their code]
-Why: [Consequence - what might break or go wrong]
-Recommendation: [Suggested code change]
-
-Before:
-[Their current code snippet]
-
-After:
-[Recommended code snippet]
-
-Note: [Acknowledge user may have valid reasons for different approach]
-```
-
-### Step 6: Identify Common Mistakes and Detection Patterns
-
-Ask your support team:
-- What questions do they answer repeatedly?
-- What mistakes do new integrators make?
-- What's hard to find in current documentation?
-
-For each common mistake, document:
-1. **How to detect it** - What pattern to look for in user code
-2. **What's wrong** - Why it's a problem
-3. **How to fix** - Specific code change needed
+**This skill validates your API integration against [Your API]'s best practices.**
+
+**To use, provide one of the following:**
+1. Copy/paste your API request (curl, JSON, HTTP format)
+2. Upload a file with your integration code
+3. Copy/paste your code snippet
+
+**Authoritative Source:**
+- This skill uses ONLY the best practices defined in this skill
+- All validation rules come from the official API specification
+- No web searches or external docs - ensuring accuracy
+
+**What happens next:**
+1. I'll identify which endpoint(s) you're calling
+2. Load the best practices for that endpoint
+3. Validate your implementation
+4. Report any issues with specific recommendations
 
 **Example:**
-```
-Common Mistake: Using sandbox credentials in production
-
-Detection: Look for test/sandbox key patterns (e.g., sk_test_, sandbox.api.example.com)
-Issue: Test credentials don't work in production
-Fix: Replace with production credentials from environment variables
+```bash
+curl -X POST "https://api.example.com/v1/payment_intents" \
+  -H "Authorization: Bearer sk_test_123" \
+  -d '{"amount": 1000, "currency": "usd"}'
 ```
 
-## Testing
-
-Before distributing the skill:
-
-1. Have someone unfamiliar with your API read the best practices
-2. Ask them to implement a basic integration using only the skill
-3. Note where they get stuck or confused
-4. Update the skill to address those gaps
-
-## Example: Validation-Focused Best Practice Skill
-
-```
 ---
-name: acme-api-best-practices
-description: "Validate Acme API integration against best practices. Use when: reviewing Acme API code, troubleshooting integration issues, validating implementation."
----
-
-# Acme API Integration Validator
-
-Provide your API request or code implementation, and this skill will check it against Acme API best practices.
-
-**Authoritative Source:** This skill uses ONLY the official Acme API best practices documented below. It will NOT search external sources or make assumptions. All validation rules come from the Acme API specification and internal engineering best practices.
 
 ## Analysis Process
 
-**When you provide your code, this skill will:**
-1. Parse your code to identify endpoints, methods, headers, error handling
-2. Run through EVERY validation check below (☐ checkboxes)
-3. For each check, determine if your code violates the rule
-4. Report ALL violations found using ❌ Issue/Why/Fix format
-5. Provide a summary of total violations by category
+**When you provide your code, I will:**
 
-**This skill will report ALL issues found, not just a subset.**
+1. **Identify which endpoint(s)** you're calling
+2. **Determine input type:**
+   - Single API request (curl/JSON) → Validate request structure only
+   - Full code implementation → Validate everything (request + error handling + retries + timeouts)
 
-## Validation Rules
+3. **Load endpoint-specific best practices** from the `endpoints/` directory
 
-**EXECUTION REQUIREMENTS:**
-1. **Run ALL validation checks below** - do not skip any
-2. **Report ALL violations found** - use ❌ Issue/Why/Fix format
-3. **Only validate against rules documented here** - no web searches or assumptions
+4. **Run validation checks** based on input type:
+   - **Request-level:** Authentication, required fields, idempotency headers
+   - **Code-level:** Error handling, retry logic, rate limiting, timeouts (for full code only)
+
+5. **Report findings** using this format:
+   ```
+   ⚠️  Issue: [What's wrong]
+   Why: [Consequence]
+   Recommendation: [How to fix - code snippet]
+   ```
+
+6. **Summary:** Count of issues by category
+
+**Philosophy:**
+- These are recommendations, not requirements
+- You may have valid reasons to deviate
+- If you acknowledge a finding and choose to proceed, that's acceptable
+
+**If user says they want to ignore a recommendation:**
+- Acknowledge the decision
+- Move on to other aspects
 
 ---
 
-### ☐ Authentication (REQUIRED CHECK)
+## Endpoints
 
-**MUST check for ALL of the following:**
-- ✗ Missing `Authorization: Bearer` header → **Issue found**
-  - Recommendation: Add `Authorization: Bearer $ACME_API_KEY` header
-- ✗ Hardcoded API keys in code → **Issue found**
-  - Recommendation: Move to environment variable: `ACME_API_KEY`
-- ✗ Test keys (sk_test_) in production code → **Issue found**
-  - Recommendation: Use production key (sk_live_)
-- ✗ No 401/403 error handling → **Issue found**
-  - Recommendation: Catch auth errors and refresh/check credentials
+This API has the following endpoints (each has detailed best practices in `endpoints/` directory):
 
-### ☐ Error Handling (REQUIRED CHECK)
+[LIST ALL ENDPOINTS HERE - auto-generated from OpenAPI spec]
+- POST /v1/payment_intents → See endpoints/POST-v1-payment-intents.md
+- POST /v1/customers → See endpoints/POST-v1-customers.md
+- GET /v1/customers/{id} → See endpoints/GET-v1-customers-{id}.md
+...
 
-**Acme error format:** `{"error": {"code": "...", "message": "...", "param": "..."}}`
-
-**MUST check for ALL of the following:**
-- ✗ Not checking response status before parsing → **Issue found**
-  - Recommendation: Check status code first: `if response.status_code != 200:`
-- ✗ Not handling 400 (bad request) → **Issue found**
-  - Recommendation: Parse `error.param` to identify bad field
-- ✗ Not handling 429 (rate limit) → **Issue found**
-  - Recommendation: Check for 429, read `Retry-After` header, wait and retry
-- ✗ Not retrying 5xx errors → **Issue found**
-  - Recommendation: Retry with exponential backoff (1s, 2s, 4s, 8s)
-
-### ☐ Rate Limiting (REQUIRED CHECK)
-
-**Limits:** 100 requests/minute, 10 requests/second burst
-
-**MUST check for ALL of the following:**
-- ✗ No rate limit detection → **Issue found**
-  - Recommendation: Check for `response.status_code == 429`
-- ✗ Not reading `Retry-After` header → **Issue found**
-  - Recommendation: `wait_time = int(response.headers.get('Retry-After', 60))`
-- ✗ Immediate retry after 429 → **Issue found**
-  - Recommendation: Wait `Retry-After` seconds before retrying
-
-### ☐ Idempotency (REQUIRED CHECK)
-
-**Idempotency is recommended for:** POST requests to `/v1/orders`, `/v1/payments`
-**Header:** `Idempotency-Key`
-**Window:** 24 hours
-
-**If user code makes POST requests to `/v1/orders` or `/v1/payments`, you MUST check:**
-- ✗ Missing `Idempotency-Key` header → **Issue found**
-  - Recommendation: Add header with unique key: `Idempotency-Key: order_{uuid}`
-  - Why: Prevents duplicate orders if network fails and request is retried
-- ✗ Reusing same key for different requests → **Issue found**
-  - Recommendation: Generate unique key per logical operation
-- ✗ Not generating unique keys properly → **Issue found**
-  - Recommendation: Use UUID or similar: `import uuid; key = str(uuid.uuid4())`
-
-### Required Fields by Context
-
-**EMEA customers:**
-- ✗ Missing `gdpr_consent` field on customer creation
-  - Fix: Add `"gdpr_consent": true` to request body
-  - Why: Required for GDPR compliance
-
-**Enterprise customers:**
-- ✗ Missing `external_id` field
-  - Fix: Add `"external_id": "{your_system_id}"` to request body
-  - Why: Required for reconciliation and support
-
-## Analysis Output Format
-
-For each issue found:
+When you provide your code, I'll automatically load the relevant endpoint file(s).
 ```
-⚠️  Issue: Missing Idempotency-Key header on POST /v1/orders
-Why: Duplicate requests may create multiple orders if network fails and the request is retried
+
+---
+
+**File 2: endpoints/POST-v1-payment-intents.md (Example Endpoint File in Conversational Format)**
+
+Use this conversational format for each endpoint file:
+
+```markdown
+# POST /v1/payment_intents
+
+## What You Need to Know
+
+**This endpoint creates a payment intent. It requires idempotency because duplicate payments are costly.**
+
+### Quick checklist
+
+When you call this endpoint, make sure you:
+1. Include an `Authorization: Bearer` header with your API key
+2. **Include an `Idempotency-Key` header** (see below - this is critical)
+3. Include `amount` and `currency` in the request body
+4. Include `external_id` if you're an Enterprise customer
+5. Include `gdpr_consent: true` if serving EMEA customers
+
+### About Idempotency
+
+This endpoint **requires** an idempotency key because payment failures could cause duplicate charges.
+
+Add a header like this:
+```bash
+-H "Idempotency-Key: pi_abc123"
+```
+
+Generate unique keys using UUID or similar:
+```python
+import uuid
+key = f"pi_{uuid.uuid4()}"
+```
+
+The idempotency window is **24 hours**. Reusing the same key within 24 hours returns the cached result.
+
+### Example: Good Request
+
+Here's a complete, correct request:
+```bash
+curl -X POST "https://api.example.com/v1/payment_intents" \
+  -H "Authorization: Bearer sk_live_abc123" \
+  -H "Idempotency-Key: pi_550e8400" \
+  -d '{
+    "amount": 1000,
+    "currency": "usd",
+    "external_id": "order_789"
+  }'
+```
+
+### Example: Common Mistakes ❌
+
+```bash
+# Missing idempotency key - risky!
+# Missing external_id for enterprise
+curl -X POST "https://api.example.com/v1/payment_intents" \
+  -H "Authorization: Bearer sk_test_123" \
+  -d '{"amount": 1000, "currency": "usd"}'
+```
+
+### Required Fields
+
+**Always required:**
+- `amount` (integer) - Amount in cents
+- `currency` (string) - Three-letter ISO code (e.g., "usd", "eur")
+
+**Context-dependent (may be required):**
+- `gdpr_consent` (boolean) - Required for EMEA customers
+- `external_id` (string) - Required for Enterprise customers
+- `payment_method_data.card.cvc` - Required when payment_method=card
+
+### For Full Code Implementations
+
+If you're writing integration code (not just testing with curl), also make sure to:
+
+**Error handling:**
+- Check the response status code before parsing the response
+- Handle errors: 400 (bad request), 429 (rate limit), 5xx (server error)
+- Parse error format: `{"error": {"code": "...", "message": "...", "param": "..."}}`
+
+**Retry logic:**
+- Retry transient errors (429, 5xx) with exponential backoff
+- Do NOT retry client errors (4xx except 429)
+- Respect `Retry-After` header when present
+
+**Timeouts:**
+- Set a 30-second timeout for this endpoint
+
+**Rate limits:**
+- This endpoint uses the global rate limit: 100 requests/minute
+- Check `X-RateLimit-Remaining` header to track usage
+- When you hit 429, wait for `Retry-After` seconds
+
+### What This Skill Validates
+
+**Request-level checks (applies to curl and code):**
+- ✓ Authentication header present
+- ✓ Idempotency-Key header present
+- ✓ Required fields (amount, currency) included
+- ✓ Context fields included when needed (gdpr_consent, external_id)
+
+**Code-level checks (full implementations only):**
+- ✓ Response status checked before parsing
+- ✓ Error handling for 400, 429, 5xx
+- ✓ Retry logic with exponential backoff
+- ✓ Appropriate timeout set (30s)
+
+---
+
+## Validation Execution
+
+**When I analyze your code, I will:**
+
+1. Check if you provided a single request or full code
+2. Run request-level checks for both
+3. Run code-level checks only for full code
+4. Report ALL issues found using this format:
+
+```
+⚠️  Issue: Missing Idempotency-Key header
+Why: Duplicate requests may create multiple charges if network fails
 Recommendation: Add this header:
 
 Before:
-requests.post(f"{base_url}/v1/orders", headers={"Authorization": f"Bearer {key}"})
+curl -X POST "https://api.example.com/v1/payment_intents" \
+  -H "Authorization: Bearer sk_live_123" \
+  -d '{"amount": 1000, "currency": "usd"}'
 
 After:
-requests.post(
-    f"{base_url}/v1/orders",
-    headers={
-        "Authorization": f"Bearer {key}",
-        "Idempotency-Key": f"order_{order_id}"
-    }
-)
+curl -X POST "https://api.example.com/v1/payment_intents" \
+  -H "Authorization: Bearer sk_live_123" \
+  -H "Idempotency-Key: pi_$(uuidgen)" \
+  -d '{"amount": 1000, "currency": "usd"}'
 
-Note: If you're handling idempotency at a different layer (load balancer, API gateway, etc.) or have a specific reason for this implementation, you can acknowledge and proceed.
+Note: If you're handling idempotency at a different layer (load balancer, API gateway),
+you can acknowledge and proceed.
 ```
+
+**Philosophy:**
+- These are recommendations to help you integrate successfully
+- You may have valid architectural reasons for different implementations
+- If you acknowledge a finding and choose to proceed, that's acceptable
+
 ```
+
+---
+
+**For each endpoint in your API, create a similar file using the conversational format above.**
+
+Key elements of the conversational format:
+1. **What You Need to Know** - Plain language explanation
+2. **Quick checklist** - Actionable items
+3. **Critical sections first** - e.g., idempotency if required
+4. **Good example** - Shows correct implementation
+5. **Common mistakes** - Shows what NOT to do
+6. **Required fields** - Clear table or list
+7. **For Full Code** - Additional requirements for implementations
+8. **What This Skill Validates** - Clear separation of request vs code checks
+
+---
+
+## Step 6: Testing the Generated Skill
+
+Before distributing the skill:
+
+1. Test with real requests - provide actual curl commands to verify validation works
+2. Test with code samples - provide full implementation code to verify code-level checks work
+3. Test edge cases - verify context-dependent fields are properly detected
+4. Have a developer unfamiliar with the API try using it and note confusions
+
+## Summary
+
+By following this skill creator, you will generate:
+
+**1. Main SKILL.md file** - Orchestrator that:
+- Explains how to use the skill
+- Identifies which endpoint the user is calling
+- Loads the appropriate endpoint file(s)
+- Runs validation based on input type
+
+**2. Per-endpoint files** - One for each endpoint, using conversational format:
+- Plain language explanation of the endpoint
+- Quick checklist of requirements
+- Good and bad examples
+- Required and context-dependent fields
+- Request-level and code-level validation rules
+
+**Key benefits of this structure:**
+- ✓ Easy to find - one file per endpoint
+- ✓ Easy to read - conversational, example-first format
+- ✓ Easy to maintain - update one endpoint without affecting others
+- ✓ Realistic - captures per-endpoint variations (errors, rate limits, etc.)
+- ✓ Scalable - add new endpoints by adding new files
+
+**Remember:**
+- Always ask which aspects vary per endpoint vs. are global
+- Use the conversational format for readability
+- Include both good and bad examples
+- Separate request-level from code-level checks
+- Make recommendations advisory, not blocking

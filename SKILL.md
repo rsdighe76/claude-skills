@@ -1,11 +1,11 @@
 ---
 name: api-best-practice-skill-creator
-description: "Create API best practice documentation tailored to a specific API. Use when: building integration best practices for a specific API, documenting error handling and retry patterns for an API, creating context-dependent field requirements for specific use cases/regions/segments, writing rate limiting and idempotency guidance for an API. This generates best practice content — not general advice."
+description: "Create or update API best practice documentation tailored to a specific API. Use when: building integration best practices for a specific API, updating an existing API best practice skill with new rules or deprecated fields, documenting error handling and retry patterns for an API, creating context-dependent field requirements for specific use cases/regions/segments, writing rate limiting and idempotency guidance for an API. This generates best practice content — not general advice."
 ---
 
 # API Best Practice Skill Creator
 
-Create best practice documentation tailored to your specific API. This guide helps PMs, Solution Engineers, Architects, Developer Evangelist and Developer Relations teams or other such folks build comprehensive best practice skills that ensure developers integrate correctly from the start or use it as a validator upon integration. 
+Create or update best practice documentation tailored to your specific API. This guide helps PMs, Solution Engineers, Architects, Developer Evangelist and Developer Relations teams or other such folks build comprehensive best practice skills that ensure developers integrate correctly from the start or use it as a validator upon integration. 
 
 ## What This Skill Creates
 
@@ -489,7 +489,7 @@ Before distributing the skill:
 
 ## Summary
 
-By following this skill creator, you will generate:
+By following this skill creator, you will generate (or update):
 
 **1. Main SKILL.md file** - Orchestrator that:
 - Explains how to use the skill
@@ -517,3 +517,142 @@ By following this skill creator, you will generate:
 - Include both good and bad examples
 - Separate request-level from code-level checks
 - Make recommendations advisory, not blocking
+
+---
+
+## Updating an Existing Skill
+
+**When the user asks to update an existing API best practice skill:**
+
+### Step 1: Identify What to Update
+
+Ask the user:
+1. Which skill to update (get the path or skill name)
+2. What changes are needed (new best practices, deprecated fields, new endpoints, etc.)
+3. Which files are affected (all files, specific endpoints, main SKILL.md only)
+
+### Step 2: Read the Current Skill Structure
+
+Use the `view` tool to read:
+1. The main SKILL.md file
+2. Any affected endpoint files
+3. Understand the current structure and format
+
+### Step 3: Make Consistent Updates
+
+When updating:
+- **Maintain the conversational format** used in existing files
+- **Update ALL affected endpoint files**, not just some
+- **Keep the same structure**: Quick Checklist → Examples → Required Fields → Validation Checks
+- **Add new validation checks** to the "What This Skill Validates" section
+- **Update the main SKILL.md** if adding global best practices
+
+### Step 4: Common Update Scenarios
+
+**Scenario A: Adding deprecated field warnings**
+- Add to main SKILL.md global section
+- Add deprecation warning to each endpoint file's validation section
+- Update examples to show correct (✅) vs deprecated (❌) patterns
+- Add to "What This Skill Validates" checklist
+
+**Scenario B: Adding new required fields**
+- Update Quick Checklist in affected endpoint files
+- Update all examples to include the new fields
+- Update "Required Fields" section
+- Add validation check for the new field
+- Update "What This Skill Validates" section
+
+**Scenario C: Adding new best practices**
+- Add to main SKILL.md if global
+- Add to specific endpoint files if endpoint-specific
+- Create a "Best Practices Summary" section if it doesn't exist
+- Update examples to demonstrate the best practice
+- Add validation checks
+
+**Scenario D: Adding new endpoint**
+- Create new endpoint file following the template from existing files
+- Add endpoint to main SKILL.md endpoints list
+- Follow the conversational format
+
+### Step 5: Verify Consistency
+
+Before presenting files, verify:
+- ✓ All affected files were updated (not just a subset)
+- ✓ Consistent terminology used across all files
+- ✓ Examples updated in all files where relevant
+- ✓ Validation checks added to all affected files
+- ✓ Main SKILL.md updated if adding global practices
+
+### Step 6: Present ALL Updated Files
+
+**CRITICAL:** Use `present_files` with ALL files that were updated, including:
+- Main SKILL.md if changed
+- ALL endpoint files that were updated (not just some)
+- README.md if changed
+
+Example:
+```python
+present_files([
+    "/mnt/user-data/outputs/api-name/SKILL.md",
+    "/mnt/user-data/outputs/api-name/endpoints/endpoint1.md",
+    "/mnt/user-data/outputs/api-name/endpoints/endpoint2.md",
+    # ... all updated endpoint files
+])
+```
+
+### Step 7: Provide Update Summary
+
+After presenting files, summarize:
+- What was added/changed
+- How many files were updated
+- What validation checks were added
+- Any breaking changes or important notes
+
+---
+
+## Update Checklist Template
+
+When updating a skill, follow this checklist:
+
+- [ ] Read existing skill structure
+- [ ] Identify all files that need updates
+- [ ] Update main SKILL.md if adding global practices
+- [ ] Update ALL relevant endpoint files (not just some)
+- [ ] Keep consistent format and terminology
+- [ ] Update examples in all affected files
+- [ ] Add validation checks to all affected files
+- [ ] Verify consistency across all files
+- [ ] Present ALL updated files (not just a subset)
+- [ ] Provide clear summary of changes
+
+---
+
+## Example Update Request Handling
+
+**User says:** "Update the skill to add deprecation warnings for `legacy_config`"
+
+**Your response:**
+1. ✅ Read main SKILL.md and all endpoint files
+2. ✅ Add deprecation section to main SKILL.md global practices
+3. ✅ Add deprecation warnings to ALL endpoint files where relevant
+4. ✅ Update validation checks in ALL endpoint files
+5. ✅ Update examples to show ❌ deprecated vs ✅ correct
+6. ✅ Present ALL updated files (main + all affected endpoints)
+7. ✅ Summarize: "Updated N files total with deprecation warnings"
+
+**User says:** "Add a new required field `line_items` to the create payment endpoint"
+
+**Your response:**
+1. ✅ Read the affected endpoint file (e.g., POST-v1-payment-intents.md)
+2. ✅ Update Quick Checklist
+3. ✅ Update all examples to include the new field
+4. ✅ Update Required Fields section
+5. ✅ Add to validation checks
+6. ✅ Present the updated file
+7. ✅ Summarize changes made
+
+**Don't do this:**
+- ❌ Update only 2 files when 10 need updating
+- ❌ Present only some files and forget the rest
+- ❌ Update examples but forget validation checks
+- ❌ Make inconsistent changes across files

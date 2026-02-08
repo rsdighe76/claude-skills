@@ -45,18 +45,27 @@ This means:
 
 **Why this matters:** Best practices are often proprietary, undocumented publicly, or vary by company. Your input is the authoritative source, and the generated skill must only reference what you've explicitly provided.
 
-### Step 1: Provide OpenAPI/Swagger Specification
+### Step 1: Provide Your API Details
 
-Before proceeding, you must provide the OpenAPI or Swagger specification for your API. This is required — do not continue without it.
+Before proceeding, you need at minimum an OpenAPI or Swagger specification for your API. There are two ways to get started:
 
-Accepted formats:
-- OpenAPI 3.x JSON or YAML file
-- Swagger 2.0 JSON or YAML file
+**Option A: Provide everything upfront using the intake template**
+
+If you'd like to skip the back-and-forth questions, fill out the [Intake Template](INTAKE-TEMPLATE.md) with your API details (rate limits, idempotency rules, context-dependent fields, etc.) and paste it along with your spec. See the [Intake Example](INTAKE-EXAMPLE.md) for a completed version. This is recommended for complex APIs with many endpoints.
+
+**Option B: Just provide the spec — I'll ask questions as we go**
+
+Provide your OpenAPI spec and I'll walk you through the remaining details step by step, asking about rate limits, idempotency, context-dependent fields, etc. as needed.
+
+**Accepted spec formats:**
+- OpenAPI 3.x JSON or YAML
+- Swagger 2.0 JSON or YAML
 - URL to a hosted spec (e.g., `https://api.example.com/openapi.json`)
+- Pasted spec content
 
 If you don't have a spec, create one first or use a tool like Swagger Editor to generate it from your API.
 
-The spec provides the foundation for understanding your API's endpoints, request/response schemas, and authentication requirements.
+**If the user provides a completed intake template**, skip to Step 5 (Create the Skill Files) — all the information from Steps 2-4 is already in the template.
 
 ### Step 2: Extract Information from OpenAPI Spec
 

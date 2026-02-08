@@ -1,26 +1,28 @@
 # API Best Practice Skill — Intake Example
 
-This is a completed intake for a fictional "Acme Payments API" to show what a filled-out template looks like.
+This is a completed intake for a fictional "Acme Payments API" to show what a filled-out template looks like. Fields marked **[auto]** are extracted from the spec — shown here for reference but you'd skip them in practice.
 
 ---
 
 ## API Overview
 
-**API Name:** Acme Payments API
+**OpenAPI Spec:** _[attached: acmepay-openapi-3.0.yaml]_
 
-**Base URLs:**
+**[auto] API Name:** Acme Payments API _(from `info.title`)_
+
+**[auto] Base URLs:** _(from `servers`)_
 - Production: https://api.acmepay.com
 - Sandbox: https://sandbox.api.acmepay.com
 
-**OpenAPI Spec:** _[attached: acmepay-openapi-3.0.yaml]_
+**[auto] Endpoints:** _(from `paths` — 9 endpoints detected)_
 
 ---
 
 ## Authentication
 
-**Method:** OAuth2 Bearer Token
+**[auto] Method:** OAuth2 Bearer Token _(from `securitySchemes`)_
 
-**Header or parameter name:** Authorization: Bearer {access_token}
+**[auto] Header or parameter name:** Authorization: Bearer {access_token} _(from `securitySchemes`)_
 
 **Environment variables developers should set:**
 - ACME_CLIENT_ID
@@ -33,7 +35,7 @@ This is a completed intake for a fictional "Acme Payments API" to show what a fi
 
 ## Error Format
 
-**Standard error response structure:**
+**[auto] Error response structure:** _(from 4xx/5xx response schemas)_
 ```json
 {
   "error": {
@@ -90,7 +92,7 @@ This is a completed intake for a fictional "Acme Payments API" to show what a fi
 
 ## Pagination (if applicable)
 
-**Pagination style:** Cursor-based
+**[auto] Pagination style:** Cursor-based _(inferred from `next_cursor` and `has_more` in response schemas)_
 
 **Fields:**
 - Next page indicator: `has_more` (boolean) and `next_cursor` (string)
@@ -115,6 +117,8 @@ This is a completed intake for a fictional "Acme Payments API" to show what a fi
 ---
 
 ## Endpoint Details
+
+The endpoint list and required fields are auto-extracted from the spec. This table adds what the spec doesn't know: idempotency rules and per-endpoint overrides.
 
 | Endpoint | Idempotency Required? | Idempotency Header | Idempotency Window | Specific Rate Limit | Specific Timeout | Notes |
 |----------|----------------------|-------------------|-------------------|--------------------|-----------------| ------|

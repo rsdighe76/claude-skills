@@ -2,25 +2,27 @@
 
 Fill out this template before using the skill creator. Paste the completed version into Claude along with your OpenAPI/Swagger spec.
 
+Fields marked with **[auto]** are extracted automatically from your OpenAPI spec — you can skip them unless your spec is missing that info or you want to override.
+
 ---
 
 ## API Overview
 
-**API Name:** _e.g., Acme Payments API_
-
-**Base URLs:**
-- Production: _e.g., https://api.acme.com_
-- Sandbox: _e.g., https://sandbox.api.acme.com_
-
 **OpenAPI Spec:** _Attach your OpenAPI 3.x or Swagger 2.0 file (JSON or YAML)_
+
+**[auto] API Name:** _Extracted from `info.title` in your spec_
+
+**[auto] Base URLs:** _Extracted from `servers` in your spec_
+
+**[auto] Endpoints:** _Extracted from `paths` in your spec_
 
 ---
 
 ## Authentication
 
-**Method:** _e.g., OAuth2 Bearer Token / API Key in header / Basic Auth_
+**[auto] Method:** _Extracted from `components.securitySchemes` — e.g., OAuth2, API Key, Bearer Token_
 
-**Header or parameter name:** _e.g., Authorization: Bearer {token}_
+**[auto] Header or parameter name:** _Extracted from `securitySchemes` — e.g., Authorization: Bearer {token}_
 
 **Environment variables developers should set:**
 - _e.g., ACME_API_KEY_
@@ -32,11 +34,12 @@ Fill out this template before using the skill creator. Paste the completed versi
 
 ## Error Format
 
-**Standard error response structure:**
+**[auto] Error response structure:** _Extracted from 4xx/5xx response schemas if defined in your spec_
+
+If not in your spec, paste your actual error response JSON here:
 ```json
 
 ```
-_Paste your actual error response JSON here_
 
 **Retryable errors (status codes):** _e.g., 429, 500, 502, 503_
 
@@ -85,7 +88,7 @@ _Paste your actual error response JSON here_
 
 ## Pagination (if applicable)
 
-**Pagination style:** _e.g., cursor-based / offset-based / page number_
+**[auto] Pagination style:** _May be inferred from response schemas if fields like `cursor`, `next`, `offset`, or `page` are present_
 
 **Fields:**
 - Next page indicator: _e.g., next_cursor, has_more_
@@ -111,7 +114,7 @@ _Paste your actual error response JSON here_
 
 ## Endpoint Details
 
-Fill in one row per endpoint. Leave blank if the global setting applies.
+Only fill in what the spec doesn't cover. The endpoint list and required fields are auto-extracted. Add per-endpoint overrides and idempotency details here.
 
 | Endpoint | Idempotency Required? | Idempotency Header | Idempotency Window | Specific Rate Limit | Specific Timeout | Notes |
 |----------|----------------------|-------------------|-------------------|--------------------|-----------------| ------|
@@ -127,7 +130,7 @@ _Add more rows as needed._
 
 ## Context-Dependent Required Fields
 
-These are fields that are optional in general but required for specific regions, customer segments, or use cases.
+These are fields that are optional in general but required for specific regions, customer segments, or use cases. This is **not** in your spec — only you know these rules.
 
 | Field Name | Which Endpoints? | When Required? | Why? |
 |-----------|-----------------|---------------|------|

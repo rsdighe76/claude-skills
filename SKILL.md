@@ -422,7 +422,63 @@ Key elements of the conversational format:
 
 ---
 
-## Step 6: Testing the Generated Skill
+## Step 6: Present ALL Files to User
+
+**CRITICAL: After creating all files, you MUST present ALL of them to the user at once.**
+
+**Do NOT just mention that files were created - actually show the complete content of each file.**
+
+Present files in this order:
+1. **Main SKILL.md** - Show complete content with triple backticks
+2. **ALL endpoint files** - Show complete content of each endpoint file, one by one
+
+**Example presentation format:**
+
+```
+I've created [N] files for your API best practices skill:
+
+---
+**File 1: SKILL.md**
+
+```markdown
+[COMPLETE CONTENT OF SKILL.MD HERE]
+```
+
+---
+**File 2: endpoints/POST-v1-payment-intents.md**
+
+```markdown
+[COMPLETE CONTENT OF ENDPOINT FILE HERE]
+```
+
+---
+**File 3: endpoints/POST-v1-customers.md**
+
+```markdown
+[COMPLETE CONTENT OF ENDPOINT FILE HERE]
+```
+
+[... CONTINUE FOR ALL ENDPOINT FILES ...]
+
+---
+
+All [N] files have been created. You can now:
+1. Copy each file's content into your local files
+2. Create the directory structure as shown
+3. Test the skill with real API requests
+```
+
+**Why this matters:** Users need to see and copy the complete content of ALL files. Don't skip any files or only show summaries.
+
+**Verification checklist before finishing:**
+- [ ] Main SKILL.md content shown in full
+- [ ] Every endpoint file content shown in full
+- [ ] Total file count mentioned (e.g., "All 8 files have been created")
+- [ ] Clear instructions on what to do with the files
+
+---
+
+## Step 7: Testing the Generated Skill
 
 Before distributing the skill:
 

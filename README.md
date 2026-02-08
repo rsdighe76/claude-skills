@@ -25,13 +25,21 @@ The generated skill can then validate API integrations (curl commands, code snip
 | Webhooks | Signature verification, delivery guarantees |
 | Pagination | Cursor/offset patterns, iterating through results |
 
-## Before You Start
+## Two Ways to Provide Your API Details
 
-Use the **[Intake Template](INTAKE-TEMPLATE.md)** to gather your API details before starting. It's a fill-in-the-blank form covering auth, errors, rate limits, endpoints, and context-dependent fields. Paste the completed template into Claude along with your OpenAPI spec.
+You can provide your API details **either way** — pick whichever works best for you:
 
-See **[Intake Example](INTAKE-EXAMPLE.md)** for a fully completed version using a fictional Payments API, so you know exactly what to fill in.
+### Option A: Fill out the intake template first (recommended for complex APIs)
 
-**What you'll need:**
+Use the **[Intake Template](INTAKE-TEMPLATE.md)** to gather everything upfront. Fill in the sections, then paste the completed template into Claude along with your OpenAPI spec. This is ideal when you have many endpoints, per-endpoint overrides, or multiple people contributing details.
+
+See **[Intake Example](INTAKE-EXAMPLE.md)** for a fully completed version using a fictional Payments API.
+
+### Option B: Answer questions conversationally (great for simpler APIs)
+
+Just provide your OpenAPI spec and the skill will walk you through it step by step — asking about rate limits, idempotency, context-dependent fields, etc. as it goes. No prep needed beyond having your spec ready.
+
+**Either way, you'll need the same information:**
 
 1. **Your OpenAPI/Swagger spec** — JSON or YAML, v2.0 or 3.x
 2. **Rate limit details** — Per-minute limits, burst limits, rate limit headers, Retry-After behavior
@@ -46,8 +54,8 @@ See **[Intake Example](INTAKE-EXAMPLE.md)** for a fully completed version using 
 
 ### Creating a New Skill
 
-1. **Provide your OpenAPI/Swagger spec** (JSON or YAML, v2.0 or 3.x)
-2. **Answer questions** about which aspects vary per endpoint vs. are global
+1. **Provide your OpenAPI/Swagger spec** and either a filled-out intake template or just the spec alone
+2. **Answer questions** (if not using the template) about which aspects vary per endpoint vs. are global
 3. **Provide API-specific details** (rate limits, retry strategies, context-dependent fields, etc.)
 4. **Receive complete skill files** ready to use
 
@@ -61,9 +69,15 @@ Supports common update scenarios: deprecated fields, new required fields, new be
 
 ## Sample Prompts
 
-### Creating a skill
+### Creating a skill (with intake template)
 
-> "Create a best practice skill for our Payments API. Here's the OpenAPI spec: [attach file]"
+> "Create a best practice skill for my API using this intake template. Here's the OpenAPI spec: https://api.example.com/openapi.json" _(paste filled-out template below)_
+
+> "I filled out the intake template for our Payments API. Here's the template and the OpenAPI spec — generate the skill."
+
+### Creating a skill (conversational — no template)
+
+> "Create a best practice skill for our Payments API. Here's the OpenAPI spec: https://api.example.com/openapi.json"
 
 > "I have a REST API for order management. Here's the Swagger spec. Build me a best practice skill that covers authentication, error handling, and idempotency."
 

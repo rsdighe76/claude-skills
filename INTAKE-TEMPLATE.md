@@ -1,6 +1,6 @@
 # API Best Practice Skill — Intake Template
 
-Fill out this template before using the skill creator. Paste the completed version into Claude along with your OpenAPI/Swagger spec.
+This template is **optional** — you can also just provide your OpenAPI spec and answer questions conversationally as the skill guides you. But if you prefer to gather everything upfront (especially useful for complex APIs with many endpoints), fill this out and paste it into Claude along with your spec.
 
 Fields marked with **[auto]** are extracted automatically from your OpenAPI spec — you can skip them unless your spec is missing that info or you want to override.
 

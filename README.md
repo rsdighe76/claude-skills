@@ -27,16 +27,20 @@ The generated skill can then validate API integrations (curl commands, code snip
 
 ## Before You Start
 
-Gather these before using the skill:
+Use the **[Intake Template](INTAKE-TEMPLATE.md)** to gather your API details before starting. It's a fill-in-the-blank form covering auth, errors, rate limits, endpoints, and context-dependent fields. Paste the completed template into Claude along with your OpenAPI spec.
 
-1. **Your OpenAPI/Swagger spec** — JSON or YAML, v2.0 or 3.x. If you don't have one, create it first using Swagger Editor or export from your API gateway.
-2. **Rate limit details** — Per-minute limits, burst limits, rate limit headers your API returns, and whether you send `Retry-After` headers.
-3. **Error format** — Your standard error response structure (e.g., `{"error": {"code": "...", "message": "..."}}`) and which status codes are retryable vs permanent.
-4. **Idempotency rules** — Which endpoints need idempotency keys, the header name, and the idempotency window duration.
-5. **Context-dependent requirements** — Fields that are optional in general but required for specific regions (e.g., GDPR fields for EMEA), customer segments (e.g., Enterprise), or use cases.
-6. **Retry strategy** — Your recommended backoff approach (initial delay, max retries, jitter).
-7. **Timeout recommendations** — Suggested timeout values per endpoint or operation type.
-8. **Webhook details** (if applicable) — Signature format, verification process, retry/delivery guarantees.
+See **[Intake Example](INTAKE-EXAMPLE.md)** for a fully completed version using a fictional Payments API, so you know exactly what to fill in.
+
+**What you'll need:**
+
+1. **Your OpenAPI/Swagger spec** — JSON or YAML, v2.0 or 3.x
+2. **Rate limit details** — Per-minute limits, burst limits, rate limit headers, Retry-After behavior
+3. **Error format** — Your error response structure and which status codes are retryable vs permanent
+4. **Idempotency rules** — Which endpoints need idempotency keys, header name, window duration
+5. **Context-dependent requirements** — Fields required for specific regions, segments, or use cases
+6. **Retry strategy** — Backoff approach, initial delay, max retries
+7. **Timeout recommendations** — Per endpoint or operation type
+8. **Webhook details** (if applicable) — Signature format, verification, delivery guarantees
 
 ## How It Works
 

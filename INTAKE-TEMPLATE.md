@@ -8,7 +8,7 @@ Fields marked with **[auto]** are extracted automatically from your OpenAPI spec
 
 ## API Overview
 
-**OpenAPI Spec:** _Attach your OpenAPI 3.x or Swagger 2.0 file (JSON or YAML)_
+**OpenAPI Spec:** _Provide URL (e.g., https://api.example.com/openapi.json) or paste the spec content below_
 
 **[auto] API Name:** _Extracted from `info.title` in your spec_
 

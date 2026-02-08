@@ -6,7 +6,7 @@ This is a completed intake for a fictional "Acme Payments API" to show what a fi
 
 ## API Overview
 
-**OpenAPI Spec:** _[attached: acmepay-openapi-3.0.yaml]_
+**OpenAPI Spec:** https://api.acmepay.com/openapi.json
 
 **[auto] API Name:** Acme Payments API _(from `info.title`)_
 

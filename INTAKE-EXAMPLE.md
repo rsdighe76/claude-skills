@@ -118,31 +118,122 @@ This is a completed intake for a fictional "Acme Payments API" to show what a fi
 
 ## Endpoint Details
 
-The endpoint list and required fields are auto-extracted from the spec. This table adds what the spec doesn't know: idempotency rules and per-endpoint overrides.
+The endpoint list and required fields are auto-extracted from the spec. These blocks add what the spec doesn't know: idempotency rules and per-endpoint overrides.
 
-| Endpoint | Idempotency Required? | Idempotency Header | Idempotency Window | Specific Rate Limit | Specific Timeout | Notes |
-|----------|----------------------|-------------------|-------------------|--------------------|-----------------| ------|
-| POST /v1/payments | Yes | Idempotency-Key | 48 hours | 50/min | 60s | Longer timeout for bank processing |
-| POST /v1/refunds | Yes | Idempotency-Key | 48 hours | 30/min | 60s | Tied to original payment_id |
-| POST /v1/customers | Yes | Idempotency-Key | 24 hours | (global) | (global) | |
-| GET /v1/payments/{id} | No | | | (global) | (global) | |
-| GET /v1/payments | No | | | (global) | (global) | Paginated, use cursor |
-| POST /v1/payouts | Yes | Idempotency-Key | 48 hours | 20/min | 90s | Slowest endpoint, bank transfers |
-| PUT /v1/customers/{id} | No | | | (global) | (global) | |
-| DELETE /v1/customers/{id} | No | | | 10/min | (global) | Low limit to prevent accidental bulk delete |
-| POST /v1/webhooks | No | | | 5/min | (global) | Webhook endpoint registration |
+### Endpoint: POST /v1/payments
+
+- **Idempotency required?** Yes
+- **Idempotency header:** Idempotency-Key
+- **Idempotency window:** 48 hours
+- **Specific rate limit:** 50/min
+- **Specific timeout:** 60s
+- **Notes:** Longer timeout for bank processing
+
+### Endpoint: POST /v1/refunds
+
+- **Idempotency required?** Yes
+- **Idempotency header:** Idempotency-Key
+- **Idempotency window:** 48 hours
+- **Specific rate limit:** 30/min
+- **Specific timeout:** 60s
+- **Notes:** Tied to original payment_id
+
+### Endpoint: POST /v1/customers
+
+- **Idempotency required?** Yes
+- **Idempotency header:** Idempotency-Key
+- **Idempotency window:** 24 hours
+- **Specific rate limit:**
+- **Specific timeout:**
+- **Notes:**
+
+### Endpoint: GET /v1/payments/{id}
+
+- **Idempotency required?** No
+- **Idempotency header:**
+- **Idempotency window:**
+- **Specific rate limit:**
+- **Specific timeout:**
+- **Notes:**
+
+### Endpoint: GET /v1/payments
+
+- **Idempotency required?** No
+- **Idempotency header:**
+- **Idempotency window:**
+- **Specific rate limit:**
+- **Specific timeout:**
+- **Notes:** Paginated, use cursor
+
+### Endpoint: POST /v1/payouts
+
+- **Idempotency required?** Yes
+- **Idempotency header:** Idempotency-Key
+- **Idempotency window:** 48 hours
+- **Specific rate limit:** 20/min
+- **Specific timeout:** 90s
+- **Notes:** Slowest endpoint, bank transfers
+
+### Endpoint: PUT /v1/customers/{id}
+
+- **Idempotency required?** No
+- **Idempotency header:**
+- **Idempotency window:**
+- **Specific rate limit:**
+- **Specific timeout:**
+- **Notes:**
+
+### Endpoint: DELETE /v1/customers/{id}
+
+- **Idempotency required?** No
+- **Idempotency header:**
+- **Idempotency window:**
+- **Specific rate limit:** 10/min
+- **Specific timeout:**
+- **Notes:** Low limit to prevent accidental bulk delete
+
+### Endpoint: POST /v1/webhooks
+
+- **Idempotency required?** No
+- **Idempotency header:**
+- **Idempotency window:**
+- **Specific rate limit:** 5/min
+- **Specific timeout:**
+- **Notes:** Webhook endpoint registration
 
 ---
 
 ## Context-Dependent Required Fields
 
-| Field Name | Which Endpoints? | When Required? | Why? |
-|-----------|-----------------|---------------|------|
-| gdpr_consent | POST /v1/payments, POST /v1/customers | EMEA customers (determined by currency EUR, GBP, or billing country in EU/UK) | GDPR compliance — payment will be rejected without it |
-| tax_id | POST /v1/payments | B2B transactions (business_type = "company") | Tax reporting requirements in EU |
-| external_id | POST /v1/payments, POST /v1/refunds, POST /v1/payouts | Enterprise plan customers | Required for reconciliation with their ERP systems |
-| shipping_address | POST /v1/payments | Physical goods (item_type = "physical") | Required by card network rules for physical goods |
-| ip_address | POST /v1/payments | Card-not-present transactions | Fraud scoring; strongly recommended, will trigger warning if missing |
+### Field: gdpr_consent
+
+- **Which endpoints?** POST /v1/payments, POST /v1/customers
+- **When required?** EMEA customers (determined by currency EUR, GBP, or billing country in EU/UK)
+- **Why?** GDPR compliance — payment will be rejected without it
+
+### Field: tax_id
+
+- **Which endpoints?** POST /v1/payments
+- **When required?** B2B transactions (business_type = "company")
+- **Why?** Tax reporting requirements in EU
+
+### Field: external_id
+
+- **Which endpoints?** POST /v1/payments, POST /v1/refunds, POST /v1/payouts
+- **When required?** Enterprise plan customers
+- **Why?** Required for reconciliation with their ERP systems
+
+### Field: shipping_address
+
+- **Which endpoints?** POST /v1/payments
+- **When required?** Physical goods (item_type = "physical")
+- **Why?** Required by card network rules for physical goods
+
+### Field: ip_address
+
+- **Which endpoints?** POST /v1/payments
+- **When required?** Card-not-present transactions
+- **Why?** Fraud scoring; strongly recommended, will trigger warning if missing
 
 ---
 

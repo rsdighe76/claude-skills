@@ -114,32 +114,47 @@ If not in your spec, paste your actual error response JSON here:
 
 ## Endpoint Details
 
-Only fill in what the spec doesn't cover. The endpoint list and required fields are auto-extracted. Add per-endpoint overrides and idempotency details here.
+Only fill in what the spec doesn't cover. The endpoint list and required fields are auto-extracted. Copy the block below for each endpoint you want to add details for.
 
-| Endpoint | Idempotency Required? | Idempotency Header | Idempotency Window | Specific Rate Limit | Specific Timeout | Notes |
-|----------|----------------------|-------------------|-------------------|--------------------|-----------------| ------|
-| _POST /v1/..._ | _Yes / No_ | _e.g., Idempotency-Key_ | _e.g., 24 hours_ | _e.g., 50/min_ | _e.g., 60s_ | |
-| _POST /v1/..._ | _Yes / No_ | | | | | |
-| _GET /v1/..._ | _No_ | | | | | |
-| _PUT /v1/..._ | _Yes / No_ | | | | | |
-| _DELETE /v1/..._ | _Yes / No_ | | | | | |
+### Endpoint: _METHOD /v1/your-endpoint_
 
-_Add more rows as needed._
+- **Idempotency required?** _Yes / No_
+- **Idempotency header:** _e.g., Idempotency-Key_
+- **Idempotency window:** _e.g., 24 hours_
+- **Specific rate limit:** _e.g., 50/min (leave blank if global applies)_
+- **Specific timeout:** _e.g., 60s (leave blank if global applies)_
+- **Notes:** ___
+
+### Endpoint: _METHOD /v1/your-endpoint_
+
+- **Idempotency required?** _Yes / No_
+- **Idempotency header:** ___
+- **Idempotency window:** ___
+- **Specific rate limit:** ___
+- **Specific timeout:** ___
+- **Notes:** ___
+
+_Copy and paste the block above for each additional endpoint._
 
 ---
 
 ## Context-Dependent Required Fields
 
-These are fields that are optional in general but required for specific regions, customer segments, or use cases. This is **not** in your spec — only you know these rules.
+These are fields that are optional in general but required for specific regions, customer segments, or use cases. This is **not** in your spec — only you know these rules. Copy the block below for each field.
 
-| Field Name | Which Endpoints? | When Required? | Why? |
-|-----------|-----------------|---------------|------|
-| _e.g., gdpr_consent_ | _POST /v1/orders_ | _EMEA customers_ | _GDPR compliance_ |
-| _e.g., tax_id_ | _POST /v1/invoices_ | _B2B transactions_ | _Tax reporting_ |
-| _e.g., external_id_ | _All POST endpoints_ | _Enterprise customers_ | _Reconciliation_ |
-| | | | |
+### Field: _field_name_
 
-_Add more rows as needed._
+- **Which endpoints?** _e.g., POST /v1/orders, POST /v1/payments_
+- **When required?** _e.g., EMEA customers, B2B transactions, Enterprise plan_
+- **Why?** _e.g., GDPR compliance, tax reporting_
+
+### Field: _field_name_
+
+- **Which endpoints?** ___
+- **When required?** ___
+- **Why?** ___
+
+_Copy and paste the block above for each additional field._
 
 ---
 

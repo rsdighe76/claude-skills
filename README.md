@@ -27,15 +27,19 @@ The generated skill can then validate API integrations (curl commands, code snip
 
 ## Two Ways to Provide Your API Details
 
-You can provide your API details **either way** — pick whichever works best for you:
+You can provide your API details in **three ways** — pick whichever works best for you:
 
-### Option A: Fill out the intake template first (recommended for complex APIs)
+### Option A: Generate a customized intake template from your spec (recommended)
 
-Use the **[Intake Template](INTAKE-TEMPLATE.md)** to gather everything upfront. Fill in the sections, then paste the completed template into Claude along with your OpenAPI spec. This is ideal when you have many endpoints, per-endpoint overrides, or multiple people contributing details.
+Provide your OpenAPI spec and ask the skill to generate a customized intake template. It will parse your spec and produce a template with your actual API name, endpoints, auth method, and error format pre-filled. You just fill in the blanks (rate limits, idempotency, context-dependent fields) and paste it back.
+
+### Option B: Fill out the generic intake template manually
+
+Use the **[Intake Template](INTAKE-TEMPLATE.md)** to gather everything upfront offline. Fill in the sections, then paste the completed template into Claude along with your OpenAPI spec. This is ideal when multiple people are contributing details.
 
 See **[Intake Example](INTAKE-EXAMPLE.md)** for a fully completed version using a fictional Payments API.
 
-### Option B: Answer questions conversationally (great for simpler APIs)
+### Option C: Answer questions conversationally (great for simpler APIs)
 
 Just provide your OpenAPI spec and the skill will walk you through it step by step — asking about rate limits, idempotency, context-dependent fields, etc. as it goes. No prep needed beyond having your spec ready.
 
@@ -69,13 +73,17 @@ Supports common update scenarios: deprecated fields, new required fields, new be
 
 ## Sample Prompts
 
-### Creating a skill (with intake template)
+### Generating a customized intake template (Option A)
 
-> "Create a best practice skill for my API using this intake template. Here's the OpenAPI spec: https://api.example.com/openapi.json" _(paste filled-out template below)_
+> "Here's my OpenAPI spec: https://api.example.com/openapi.json — generate an intake template for my API."
 
-> "I filled out the intake template for our Payments API. Here's the template and the OpenAPI spec — generate the skill."
+> "Parse this spec and create a customized intake template so I know exactly what to fill in."
 
-### Creating a skill (conversational — no template)
+### Creating a skill (with completed template — Option A or B)
+
+> "Here's my completed intake template and OpenAPI spec — generate the best practice skill." _(paste filled-out template below)_
+
+### Creating a skill (conversational — Option C)
 
 > "Create a best practice skill for our Payments API. Here's the OpenAPI spec: https://api.example.com/openapi.json"
 

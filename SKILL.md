@@ -47,15 +47,21 @@ This means:
 
 ### Step 1: Provide Your API Details
 
-Before proceeding, you need at minimum an OpenAPI or Swagger specification for your API. There are two ways to get started:
+Before proceeding, you need at minimum an OpenAPI or Swagger specification for your API. There are three ways to get started:
 
-**Option A: Provide everything upfront using the intake template**
+**Option A: Generate a customized intake template from your spec (recommended)**
 
-If you'd like to skip the back-and-forth questions, fill out the [Intake Template](INTAKE-TEMPLATE.md) with your API details (rate limits, idempotency rules, context-dependent fields, etc.) and paste it along with your spec. See the [Intake Example](INTAKE-EXAMPLE.md) for a completed version. This is recommended for complex APIs with many endpoints.
+Provide your OpenAPI spec and ask: _"Generate an intake template for my API."_ The skill will parse your spec and produce a **customized template** with your actual API name, base URLs, auth method, error format, and every endpoint pre-listed as blocks ready to fill in. You then only need to add what the spec doesn't know (rate limits, idempotency rules, context-dependent fields, etc.), paste the completed template back, and the skill generates your best practice files.
 
-**Option B: Just provide the spec — I'll ask questions as we go**
+This is the easiest path — you see your real endpoints listed out and just fill in the blanks.
 
-Provide your OpenAPI spec and I'll walk you through the remaining details step by step, asking about rate limits, idempotency, context-dependent fields, etc. as needed.
+**Option B: Fill out the generic intake template manually**
+
+If you'd prefer to work offline, fill out the [Intake Template](INTAKE-TEMPLATE.md) with your API details and paste it along with your spec. See the [Intake Example](INTAKE-EXAMPLE.md) for a completed version.
+
+**Option C: Just provide the spec — I'll ask questions as we go**
+
+Provide your OpenAPI spec and I'll walk you through the remaining details step by step, asking about rate limits, idempotency, context-dependent fields, etc. as needed. No prep required.
 
 **Accepted spec formats:**
 - OpenAPI 3.x JSON or YAML
@@ -65,7 +71,46 @@ Provide your OpenAPI spec and I'll walk you through the remaining details step b
 
 If you don't have a spec, create one first or use a tool like Swagger Editor to generate it from your API.
 
-**If the user provides a completed intake template**, skip to Step 5 (Create the Skill Files) — all the information from Steps 2-4 is already in the template.
+**If the user provides a completed intake template** (Option A or B), skip to Step 5 (Create the Skill Files) — all the information from Steps 2-4 is already in the template.
+
+**If the user asks to generate a customized intake template** (Option A), proceed to Step 1b below.
+
+---
+
+### Step 1b: Generate a Customized Intake Template
+
+**When the user provides a spec and asks for a customized intake template:**
+
+1. Parse the OpenAPI spec to extract:
+   - API name from `info.title`
+   - Base URLs from `servers`
+   - Auth method from `components.securitySchemes`
+   - Error format from 4xx/5xx response schemas
+   - Pagination style from response schemas
+   - All endpoints from `paths`
+
+2. Generate a customized intake template with:
+   - **[auto]** fields pre-filled with extracted values
+   - **Every endpoint** listed as a separate block with the actual path pre-filled (not generic placeholders)
+   - **Blank fields** for what the spec doesn't cover: rate limits, idempotency, timeouts, context-dependent fields
+   - The global sections (rate limits, retry, timeouts, webhooks) left blank for the user to fill in
+
+3. Present the customized template and say:
+   ```
+   Here's your customized intake template based on your OpenAPI spec.
+   I've pre-filled everything I could extract from the spec.
+
+   Please fill in the remaining blank fields:
+   - Rate limits (global and per-endpoint)
+   - Idempotency details per endpoint
+   - Timeout overrides per endpoint
+   - Context-dependent required fields
+   - Any gotchas or deprecated fields
+
+   Once complete, paste it back and I'll generate your best practice skill.
+   ```
+
+4. **When the user returns the completed template**, skip to Step 5 (Create the Skill Files).
 
 ### Step 2: Extract Information from OpenAPI Spec
 

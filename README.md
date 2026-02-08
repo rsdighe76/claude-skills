@@ -31,7 +31,7 @@ You can provide your API details in **three ways** — pick whichever works best
 
 ### Option A: Generate a customized intake template from your spec (recommended)
 
-Provide your OpenAPI spec and ask the skill to generate a customized intake template. It will parse your spec and produce a template with your actual API name, endpoints, auth method, and error format pre-filled. You just fill in the blanks (rate limits, idempotency, context-dependent fields) and paste it back.
+Provide your OpenAPI spec and ask the skill to generate a customized intake template. It will parse your spec and search your public developer docs to produce a template with your actual API name, endpoints, auth method, error format, rate limits, and more pre-filled. Fields from your spec are marked **[auto]** and fields from public docs are marked **[web]** so you know what to review. You just confirm, correct, fill in any gaps, and paste it back.
 
 ### Option B: Fill out the generic intake template manually
 

@@ -81,36 +81,58 @@ If you don't have a spec, create one first or use a tool like Swagger Editor to 
 
 **When the user provides a spec and asks for a customized intake template:**
 
-1. Parse the OpenAPI spec to extract:
-   - API name from `info.title`
-   - Base URLs from `servers`
-   - Auth method from `components.securitySchemes`
-   - Error format from 4xx/5xx response schemas
-   - Pagination style from response schemas
-   - All endpoints from `paths`
+**Phase 1: Extract from the OpenAPI spec**
 
-2. Generate a customized intake template with:
-   - **[auto]** fields pre-filled with extracted values
-   - **Every endpoint** listed as a separate block with the actual path pre-filled (not generic placeholders)
-   - **Blank fields** for what the spec doesn't cover: rate limits, idempotency, timeouts, context-dependent fields
-   - The global sections (rate limits, retry, timeouts, webhooks) left blank for the user to fill in
+Parse the spec to extract:
+- API name from `info.title`
+- Base URLs from `servers`
+- Auth method from `components.securitySchemes`
+- Error format from 4xx/5xx response schemas
+- Pagination style from response schemas
+- All endpoints from `paths`
 
-3. Present the customized template and say:
-   ```
-   Here's your customized intake template based on your OpenAPI spec.
-   I've pre-filled everything I could extract from the spec.
+**Phase 2: Enrich from public documentation (if available)**
 
-   Please fill in the remaining blank fields:
-   - Rate limits (global and per-endpoint)
-   - Idempotency details per endpoint
-   - Timeout overrides per endpoint
-   - Context-dependent required fields
-   - Any gotchas or deprecated fields
+Search the web for the API's public developer documentation to pre-fill additional details. Look for:
+- Rate limit documentation (requests per minute, burst limits, rate limit headers)
+- Retry and backoff guidance
+- Idempotency requirements and key formats
+- Timeout recommendations
+- Webhook setup and signature verification docs
+- Known deprecated fields or migration guides
+- Error code reference pages
 
-   Once complete, paste it back and I'll generate your best practice skill.
-   ```
+**IMPORTANT:** Any information gathered from the web is a **suggestion only**. Mark web-sourced fields with **[web]** so the user knows to review and confirm or correct them. The user is the authoritative source — web info is a starting point to reduce manual effort.
 
-4. **When the user returns the completed template**, skip to Step 5 (Create the Skill Files).
+**Phase 3: Generate the customized template**
+
+Produce a template with:
+- **[auto]** fields pre-filled from the spec
+- **[web]** fields pre-filled from public docs (clearly marked for user review)
+- **Every endpoint** listed as a separate block with the actual path pre-filled
+- **Blank fields** for anything not found in the spec or public docs
+
+**Phase 4: Present for review**
+
+Present the customized template and say:
+```
+Here's your customized intake template based on your OpenAPI spec
+and public documentation.
+
+Fields marked [auto] were extracted from your spec.
+Fields marked [web] were found in your public docs — please review
+and correct these, as your internal requirements may differ.
+
+Please fill in any remaining blank fields:
+- Rate limits (if not found in docs)
+- Idempotency details per endpoint
+- Context-dependent required fields (only you know these)
+- Any internal gotchas or undocumented best practices
+
+Once complete, paste it back and I'll generate your best practice skill.
+```
+
+**When the user returns the completed template**, skip to Step 5 (Create the Skill Files).
 
 ### Step 2: Extract Information from OpenAPI Spec
 

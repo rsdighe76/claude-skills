@@ -25,7 +25,7 @@ The generated skill can then validate API integrations (curl commands, code snip
 | Webhooks | Signature verification, delivery guarantees |
 | Pagination | Cursor/offset patterns, iterating through results |
 
-## Two Ways to Provide Your API Details
+## Three Ways to Provide Your API Details
 
 You can provide your API details in **three ways** — pick whichever works best for you:
 
@@ -125,7 +125,7 @@ your-api-best-practices/
 
 ## Design Principles
 
-- **Authoritative** — Uses only information you provide; no web searches or assumptions
+- **Authoritative** — The generated skill uses only information you provide; web searches during intake template generation are suggestions only, always marked [web] for your review
 - **Deterministic** — Same input always produces the same validation results
 - **Advisory** — Recommendations, not blockers; users can acknowledge and proceed
 - **Endpoint-first** — Each endpoint has its own file for easy maintenance and scalability

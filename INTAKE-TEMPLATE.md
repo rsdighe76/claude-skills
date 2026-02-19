@@ -119,8 +119,8 @@ Only fill in what the spec doesn't cover. The endpoint list and required fields 
 ### Endpoint: _METHOD /v1/your-endpoint_
 
 - **Idempotency required?** _Yes / No_
-- **Idempotency header:** _e.g., Idempotency-Key_
-- **Idempotency window:** _e.g., 24 hours_
+- **Idempotency header:** _e.g., Idempotency-Key (N/A if not required)_
+- **Idempotency window:** _e.g., 24 hours (N/A if not required)_
 - **Specific rate limit:** _e.g., 50/min (leave blank if global applies)_
 - **Specific timeout:** _e.g., 60s (leave blank if global applies)_
 - **Notes:** ___
@@ -128,10 +128,10 @@ Only fill in what the spec doesn't cover. The endpoint list and required fields 
 ### Endpoint: _METHOD /v1/your-endpoint_
 
 - **Idempotency required?** _Yes / No_
-- **Idempotency header:** ___
-- **Idempotency window:** ___
-- **Specific rate limit:** ___
-- **Specific timeout:** ___
+- **Idempotency header:** _N/A if not required_
+- **Idempotency window:** _N/A if not required_
+- **Specific rate limit:** _leave blank if global applies_
+- **Specific timeout:** _leave blank if global applies_
 - **Notes:** ___
 
 _Copy and paste the block above for each additional endpoint._

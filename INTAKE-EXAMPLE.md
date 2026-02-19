@@ -150,8 +150,8 @@ The endpoint list and required fields are auto-extracted from the spec. These bl
 ### Endpoint: GET /v1/payments/{id}
 
 - **Idempotency required?** No
-- **Idempotency header:**
-- **Idempotency window:**
+- **Idempotency header:** N/A
+- **Idempotency window:** N/A
 - **Specific rate limit:**
 - **Specific timeout:**
 - **Notes:**
@@ -159,8 +159,8 @@ The endpoint list and required fields are auto-extracted from the spec. These bl
 ### Endpoint: GET /v1/payments
 
 - **Idempotency required?** No
-- **Idempotency header:**
-- **Idempotency window:**
+- **Idempotency header:** N/A
+- **Idempotency window:** N/A
 - **Specific rate limit:**
 - **Specific timeout:**
 - **Notes:** Paginated, use cursor
@@ -177,8 +177,8 @@ The endpoint list and required fields are auto-extracted from the spec. These bl
 ### Endpoint: PUT /v1/customers/{id}
 
 - **Idempotency required?** No
-- **Idempotency header:**
-- **Idempotency window:**
+- **Idempotency header:** N/A
+- **Idempotency window:** N/A
 - **Specific rate limit:**
 - **Specific timeout:**
 - **Notes:**
@@ -186,8 +186,8 @@ The endpoint list and required fields are auto-extracted from the spec. These bl
 ### Endpoint: DELETE /v1/customers/{id}
 
 - **Idempotency required?** No
-- **Idempotency header:**
-- **Idempotency window:**
+- **Idempotency header:** N/A
+- **Idempotency window:** N/A
 - **Specific rate limit:** 10/min
 - **Specific timeout:**
 - **Notes:** Low limit to prevent accidental bulk delete
@@ -195,8 +195,8 @@ The endpoint list and required fields are auto-extracted from the spec. These bl
 ### Endpoint: POST /v1/webhooks
 
 - **Idempotency required?** No
-- **Idempotency header:**
-- **Idempotency window:**
+- **Idempotency header:** N/A
+- **Idempotency window:** N/A
 - **Specific rate limit:** 5/min
 - **Specific timeout:**
 - **Notes:** Webhook endpoint registration

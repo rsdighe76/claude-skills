@@ -1,6 +1,6 @@
 ---
 name: api-best-practice-skill-creator
-description: "Create or update API best practice documentation tailored to a specific API. Use when: building integration best practices for a specific API, updating an existing API best practice skill with new rules or deprecated fields, documenting error handling and retry patterns for an API, creating context-dependent field requirements for specific use cases/regions/segments, writing rate limiting and idempotency guidance for an API. This generates best practice content — not general advice."
+description: "Create or update API best practice documentation from an OpenAPI spec. Generates per-endpoint validation skills for authentication, errors, retries, rate limits, and idempotency."
 ---
 
 # API Best Practice Skill Creator
@@ -39,9 +39,11 @@ This means:
 - ✓ The generated skill uses ONLY information you provide (OpenAPI spec + your input)
 - ✓ All validation rules are explicitly defined by you
 - ✓ The skill is deterministic - same input always produces same validation results
-- ✗ The skill will NOT search the web or external docs
+- ✗ The generated skill will NOT search the web or external docs at validation time
 - ✗ The skill will NOT make assumptions about your API
 - ✗ The skill will NOT hallucinate requirements
+
+**Note:** During intake template generation (Step 1b), this creator skill may search public developer docs to pre-fill suggestions — but these are always marked **[web]** for your review and the final generated skill never searches the web.
 
 **Why this matters:** Best practices are often proprietary, undocumented publicly, or vary by company. Your input is the authoritative source, and the generated skill must only reference what you've explicitly provided.
 
@@ -74,6 +76,8 @@ If you don't have a spec, create one first or use a tool like Swagger Editor to 
 **If the user provides a completed intake template** (Option A or B), skip to Step 5 (Create the Skill Files) — all the information from Steps 2-4 is already in the template.
 
 **If the user asks to generate a customized intake template** (Option A), proceed to Step 1b below.
+
+**If the user provides just the spec with no template** (Option C), proceed to Step 2 below.
 
 ---
 
@@ -231,9 +235,10 @@ For each endpoint that varies, ask:
 6. **THEN** proceed to create the skill files
 
 Do NOT say "Perfect!" or "Great!" or start creating files before the user has answered your questions.
+
 ### Step 5: Create the Skill Files
 
-Create a directory structure with the main skill file and per-endpoint files:
+Create the output directory in the user's current working directory (or ask the user for a preferred path). Structure:
 
 ```
 [your-api]-best-practices/
@@ -244,6 +249,10 @@ Create a directory structure with the main skill file and per-endpoint files:
     GET-v1-customers-{id}.md
     ... (one file per endpoint)
 ```
+
+**Before finalizing:** Search all generated files for `example.com` and other placeholder URLs — replace every occurrence with the user's actual API domain. Placeholder leakage is a common mistake.
+
+**Optional — Language-specific examples:** Ask the user if they want code examples in specific languages (Python, Node.js, Go, etc.) in addition to curl. If yes, include language-specific snippets in the endpoint files alongside the curl examples.
 
 ---
 
@@ -498,59 +507,21 @@ Key elements of the conversational format:
 
 ---
 
-## Step 6: Present ALL Files to User
+## Step 6: Write ALL Files to Disk
 
-**CRITICAL: After creating all files, you MUST present ALL of them to the user at once.**
+**CRITICAL: Write all generated files directly to the user's filesystem.** Do not dump file contents into the chat — write them using file creation tools.
 
-**Do NOT just mention that files were created - actually show the complete content of each file.**
-
-Present files in this order:
-1. **Main SKILL.md** - Show complete content with triple backticks
-2. **ALL endpoint files** - Show complete content of each endpoint file, one by one
-
-**Example presentation format:**
-
-```
-I've created [N] files for your API best practices skill:
-
----
-**File 1: SKILL.md**
-
-```markdown
-[COMPLETE CONTENT OF SKILL.MD HERE]
-```
-
----
-**File 2: endpoints/POST-v1-payment-intents.md**
-
-```markdown
-[COMPLETE CONTENT OF ENDPOINT FILE HERE]
-```
-
----
-**File 3: endpoints/POST-v1-customers.md**
-
-```markdown
-[COMPLETE CONTENT OF ENDPOINT FILE HERE]
-```
-
-[... CONTINUE FOR ALL ENDPOINT FILES ...]
-
----
-
-All [N] files have been created. You can now:
-1. Copy each file's content into your local files
-2. Create the directory structure as shown
-3. Test the skill with real API requests
-```
-
-**Why this matters:** Users need to see and copy the complete content of ALL files. Don't skip any files or only show summaries.
+**Process:**
+1. Create the `[your-api]-best-practices/` directory and `endpoints/` subdirectory in the user's current working directory (or ask the user for a preferred output path if unclear)
+2. Write the main `SKILL.md` file
+3. Write every endpoint file into `endpoints/`
+4. After writing, list all created files with their paths
 
 **Verification checklist before finishing:**
-- [ ] Main SKILL.md content shown in full
-- [ ] Every endpoint file content shown in full
-- [ ] Total file count mentioned (e.g., "All 8 files have been created")
-- [ ] Clear instructions on what to do with the files
+- [ ] All files written to disk (not just displayed in chat)
+- [ ] Total file count reported (e.g., "Created 8 files")
+- [ ] Directory structure confirmed with a file listing
+- [ ] User told how to test the skill
 
 ---
 
@@ -598,137 +569,33 @@ By following this skill creator, you will generate (or update):
 
 ## Updating an Existing Skill
 
-**When the user asks to update an existing API best practice skill:**
+**When the user asks to update an existing API best practice skill, follow this process:**
 
-### Step 1: Identify What to Update
+### Identify and Read
 
-Ask the user:
-1. Which skill to update (get the path or skill name)
-2. What changes are needed (new best practices, deprecated fields, new endpoints, etc.)
-3. Which files are affected (all files, specific endpoints, main SKILL.md only)
+1. Ask the user: which skill, what changes, which files are affected
+2. Read the main SKILL.md and all affected endpoint files to understand the current structure
 
-### Step 2: Read the Current Skill Structure
+### Make Consistent Updates
 
-Use the `view` tool to read:
-1. The main SKILL.md file
-2. Any affected endpoint files
-3. Understand the current structure and format
+For every update, apply changes across **all** affected files — not just some:
 
-### Step 3: Make Consistent Updates
-
-When updating:
 - **Maintain the conversational format** used in existing files
-- **Update ALL affected endpoint files**, not just some
 - **Keep the same structure**: Quick Checklist → Examples → Required Fields → Validation Checks
-- **Add new validation checks** to the "What This Skill Validates" section
-- **Update the main SKILL.md** if adding global best practices
+- **Update examples** in every affected file to reflect the change
+- **Add validation checks** to "What This Skill Validates" in every affected file
+- **Update the main SKILL.md** if adding global best practices or new endpoints
 
-### Step 4: Common Update Scenarios
+**Common scenarios and what to touch:**
 
-**Scenario A: Adding deprecated field warnings**
-- Add to main SKILL.md global section
-- Add deprecation warning to each endpoint file's validation section
-- Update examples to show correct (✅) vs deprecated (❌) patterns
-- Add to "What This Skill Validates" checklist
+| Scenario | Main SKILL.md | Endpoint files | What to update |
+|----------|:---:|:---:|----------------|
+| Deprecated field warnings | ✓ | All with that field | Examples (old vs new), validation checks, Quick Checklist |
+| New required fields | — | Affected endpoints | Quick Checklist, examples, Required Fields, validation checks |
+| New best practices | If global | If endpoint-specific | Examples, validation checks |
+| New endpoint | Add to list | Create new file | Follow conversational format from existing files |
 
-**Scenario B: Adding new required fields**
-- Update Quick Checklist in affected endpoint files
-- Update all examples to include the new fields
-- Update "Required Fields" section
-- Add validation check for the new field
-- Update "What This Skill Validates" section
+### Write and Summarize
 
-**Scenario C: Adding new best practices**
-- Add to main SKILL.md if global
-- Add to specific endpoint files if endpoint-specific
-- Create a "Best Practices Summary" section if it doesn't exist
-- Update examples to demonstrate the best practice
-- Add validation checks
-
-**Scenario D: Adding new endpoint**
-- Create new endpoint file following the template from existing files
-- Add endpoint to main SKILL.md endpoints list
-- Follow the conversational format
-
-### Step 5: Verify Consistency
-
-Before presenting files, verify:
-- ✓ All affected files were updated (not just a subset)
-- ✓ Consistent terminology used across all files
-- ✓ Examples updated in all files where relevant
-- ✓ Validation checks added to all affected files
-- ✓ Main SKILL.md updated if adding global practices
-
-### Step 6: Present ALL Updated Files
-
-**CRITICAL:** Use `present_files` with ALL files that were updated, including:
-- Main SKILL.md if changed
-- ALL endpoint files that were updated (not just some)
-- README.md if changed
-
-Example:
-```python
-present_files([
-    "/mnt/user-data/outputs/api-name/SKILL.md",
-    "/mnt/user-data/outputs/api-name/endpoints/endpoint1.md",
-    "/mnt/user-data/outputs/api-name/endpoints/endpoint2.md",
-    # ... all updated endpoint files
-])
-```
-
-### Step 7: Provide Update Summary
-
-After presenting files, summarize:
-- What was added/changed
-- How many files were updated
-- What validation checks were added
-- Any breaking changes or important notes
-
----
-
-## Update Checklist Template
-
-When updating a skill, follow this checklist:
-
-- [ ] Read existing skill structure
-- [ ] Identify all files that need updates
-- [ ] Update main SKILL.md if adding global practices
-- [ ] Update ALL relevant endpoint files (not just some)
-- [ ] Keep consistent format and terminology
-- [ ] Update examples in all affected files
-- [ ] Add validation checks to all affected files
-- [ ] Verify consistency across all files
-- [ ] Present ALL updated files (not just a subset)
-- [ ] Provide clear summary of changes
-
----
-
-## Example Update Request Handling
-
-**User says:** "Update the skill to add deprecation warnings for `legacy_config`"
-
-**Your response:**
-1. ✅ Read main SKILL.md and all endpoint files
-2. ✅ Add deprecation section to main SKILL.md global practices
-3. ✅ Add deprecation warnings to ALL endpoint files where relevant
-4. ✅ Update validation checks in ALL endpoint files
-5. ✅ Update examples to show ❌ deprecated vs ✅ correct
-6. ✅ Present ALL updated files (main + all affected endpoints)
-7. ✅ Summarize: "Updated N files total with deprecation warnings"
-
-**User says:** "Add a new required field `line_items` to the create payment endpoint"
-
-**Your response:**
-1. ✅ Read the affected endpoint file (e.g., POST-v1-payment-intents.md)
-2. ✅ Update Quick Checklist
-3. ✅ Update all examples to include the new field
-4. ✅ Update Required Fields section
-5. ✅ Add to validation checks
-6. ✅ Present the updated file
-7. ✅ Summarize changes made
-
-**Don't do this:**
-- ❌ Update only 2 files when 10 need updating
-- ❌ Present only some files and forget the rest
-- ❌ Update examples but forget validation checks
-- ❌ Make inconsistent changes across files
+1. Write all updated files back to disk (do not just display diffs in chat)
+2. Summarize: what changed, how many files updated, any breaking changes

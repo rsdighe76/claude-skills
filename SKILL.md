@@ -507,21 +507,57 @@ Key elements of the conversational format:
 
 ---
 
-## Step 6: Write ALL Files to Disk
+## Step 6: Deliver ALL Files
 
-**CRITICAL: Write all generated files directly to the user's filesystem.** Do not dump file contents into the chat — write them using file creation tools.
+**If file-writing tools are available (e.g., running in Claude Code):**
 
-**Process:**
-1. Create the `[your-api]-best-practices/` directory and `endpoints/` subdirectory in the user's current working directory (or ask the user for a preferred output path if unclear)
-2. Write the main `SKILL.md` file
+Write all files directly to disk:
+1. Create `[your-api]-best-practices/` and `endpoints/` in the user's current working directory (or ask for a preferred path)
+2. Write the main `SKILL.md`
 3. Write every endpoint file into `endpoints/`
-4. After writing, list all created files with their paths
+4. Confirm with a file listing and total count
 
-**Verification checklist before finishing:**
-- [ ] All files written to disk (not just displayed in chat)
-- [ ] Total file count reported (e.g., "Created 8 files")
-- [ ] Directory structure confirmed with a file listing
-- [ ] User told how to test the skill
+---
+
+**If no file-writing tools are available (e.g., running in Claude.ai):**
+
+Present every file in the chat in this exact order and format:
+
+```
+I've created [N] files for your [API Name] best practices skill.
+Copy each file's content into the correct path to set up the skill.
+
+Directory structure:
+[your-api]-best-practices/
+  SKILL.md
+  endpoints/
+    POST-v1-example.md
+    ... (one per endpoint)
+```
+
+Then output each file as a clearly labelled block:
+
+---
+**File 1 of [N]: `[your-api]-best-practices/SKILL.md`**
+```markdown
+[COMPLETE FILE CONTENT]
+```
+
+---
+**File 2 of [N]: `[your-api]-best-practices/endpoints/POST-v1-example.md`**
+```markdown
+[COMPLETE FILE CONTENT]
+```
+
+[Continue for every endpoint file — do NOT skip any]
+
+---
+
+**CRITICAL rules for the chat presentation path:**
+- Show ALL files — never summarize or truncate
+- Always show the main `SKILL.md` first, then endpoint files in order
+- Include the full file path as the label so the user knows exactly where to save it
+- End with: "All [N] files above. Create the directory structure and copy each file to its path."
 
 ---
 

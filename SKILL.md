@@ -243,6 +243,8 @@ Create the output directory in the user's current working directory (or ask the 
 ```
 [your-api]-best-practices/
   SKILL.md                    (main orchestrator)
+  shared/
+    error-codes.md            (global error format, universal status codes, retry rules)
   endpoints/
     POST-v1-payment-intents.md
     POST-v1-customers.md
@@ -305,6 +307,7 @@ curl -X POST "https://api.example.com/v1/payment_intents" \
    - Full code implementation → Validate everything (request + error handling + retries + timeouts)
 
 3. **Load endpoint-specific best practices** from the `endpoints/` directory
+   - For error handling questions, also load `shared/error-codes.md`
 
 4. **Run validation checks** based on input type:
    - **Request-level:** Authentication, required fields, idempotency headers
@@ -423,13 +426,10 @@ If you're writing integration code (not just testing with curl), also make sure 
 
 **Error handling:**
 - Check the response status code before parsing the response
-- Handle errors: 400 (bad request), 429 (rate limit), 5xx (server error)
-- Parse error format: `{"error": {"code": "...", "message": "...", "param": "..."}}`
-
-**Retry logic:**
-- Retry transient errors (429, 5xx) with exponential backoff
-- Do NOT retry client errors (4xx except 429)
-- Respect `Retry-After` header when present
+- For global error codes, retry rules, and error format: see `shared/error-codes.md`
+- Endpoint-specific errors for this operation:
+  - `400 invalid_parameter` — `amount` or `currency` missing or wrong type
+  - `409 idempotency_conflict` — same key used with different parameters
 
 **Timeouts:**
 - Set a 30-second timeout for this endpoint
@@ -502,8 +502,75 @@ Key elements of the conversational format:
 4. **Good example** - Shows correct implementation
 5. **Common mistakes** - Shows what NOT to do
 6. **Required fields** - Clear table or list
-7. **For Full Code** - Additional requirements for implementations
+7. **For Full Code** - Additional requirements for implementations (reference `shared/error-codes.md` for global errors; list only endpoint-specific errors inline)
 8. **What This Skill Validates** - Clear separation of request vs code checks
+
+---
+
+**File 3: shared/error-codes.md**
+
+Generate this file once, covering only what is truly global across all endpoints:
+
+```markdown
+# [Your API] Error Reference
+
+## Error Response Format
+
+All errors from [Your API] follow this format:
+
+```json
+[PASTE ACTUAL ERROR RESPONSE FORMAT FROM INTAKE — e.g.:]
+{
+  "error": {
+    "code": "INVALID_PARAMETER",
+    "message": "The field 'amount' must be a positive integer.",
+    "param": "amount"
+  }
+}
+```
+
+## Status Codes
+
+| Code | Meaning | Retryable | Action |
+|------|---------|:---------:|--------|
+| 400  | Bad request — invalid parameters | No | Fix the request |
+| 401  | Authentication failed | No | Check credentials |
+| 403  | Forbidden — insufficient permissions | No | Check API key scopes |
+| 404  | Resource not found | No | Check the ID/path |
+| 409  | Conflict — duplicate or state mismatch | No | Check idempotency key |
+| 422  | Unprocessable — business rule violation | No | Read the error message |
+| 429  | Rate limited | Yes | Wait for `Retry-After` header |
+| 500  | Server error | Yes | Retry with backoff |
+| 502  | Bad gateway | Yes | Retry with backoff |
+| 503  | Service unavailable | Yes | Retry with backoff |
+
+[Adjust the table above to match only the status codes your API actually returns]
+
+## Retry Strategy
+
+**Retryable errors:** [LIST STATUS CODES — e.g., 429, 500, 502, 503]
+
+**Non-retryable errors:** [LIST STATUS CODES — e.g., 400, 401, 403, 404, 409, 422]
+
+**Backoff approach:**
+- Initial delay: [e.g., 1 second]
+- Multiplier: [e.g., exponential — delay * 2^attempt]
+- Jitter: [e.g., add random 0–500ms to avoid thundering herd]
+- Max delay: [e.g., 30 seconds]
+- Max retries: [e.g., 3]
+- Always respect `Retry-After` header when present on 429 responses
+
+## Common Mistakes
+
+| Mistake | Result | Fix |
+|---------|--------|-----|
+| Retrying a 400 | Wasted requests, same error | Fix the request first |
+| Not checking `Retry-After` on 429 | Getting blocked longer | Read the header value |
+| Retrying without backoff | Getting rate limited again | Add exponential backoff |
+| Catching all errors the same way | Missing recoverable vs permanent | Branch on status code |
+```
+
+**Note:** Do NOT put endpoint-specific business errors (e.g., `insufficient_funds`, `card_declined`) in this file — those belong in each endpoint's own file under **For Full Code Implementations**.
 
 ---
 
@@ -512,10 +579,11 @@ Key elements of the conversational format:
 **If file-writing tools are available (e.g., running in Claude Code):**
 
 Write all files directly to disk:
-1. Create `[your-api]-best-practices/` and `endpoints/` in the user's current working directory (or ask for a preferred path)
+1. Create `[your-api]-best-practices/`, `shared/`, and `endpoints/` in the user's current working directory (or ask for a preferred path)
 2. Write the main `SKILL.md`
-3. Write every endpoint file into `endpoints/`
-4. Confirm with a file listing and total count
+3. Write `shared/error-codes.md`
+4. Write every endpoint file into `endpoints/`
+5. Confirm with a file listing and total count
 
 ---
 
@@ -530,12 +598,14 @@ Copy each file's content into the correct path to set up the skill.
 Directory structure:
 [your-api]-best-practices/
   SKILL.md
+  shared/
+    error-codes.md
   endpoints/
     POST-v1-example.md
     ... (one per endpoint)
 ```
 
-Then output each file as a clearly labelled block:
+Then output each file as a clearly labelled block, in this order: SKILL.md first, then shared files, then endpoint files:
 
 ---
 **File 1 of [N]: `[your-api]-best-practices/SKILL.md`**
@@ -544,7 +614,13 @@ Then output each file as a clearly labelled block:
 ```
 
 ---
-**File 2 of [N]: `[your-api]-best-practices/endpoints/POST-v1-example.md`**
+**File 2 of [N]: `[your-api]-best-practices/shared/error-codes.md`**
+```markdown
+[COMPLETE FILE CONTENT]
+```
+
+---
+**File 3 of [N]: `[your-api]-best-practices/endpoints/POST-v1-example.md`**
 ```markdown
 [COMPLETE FILE CONTENT]
 ```

@@ -59,7 +59,7 @@ This is the easiest path — you see your real endpoints listed out and just fil
 
 **Option B: Fill out the generic intake template manually**
 
-If you'd prefer to work offline, fill out the [Intake Template](INTAKE-TEMPLATE.md) with your API details and paste it along with your spec. See the [Intake Example](INTAKE-EXAMPLE.md) for a completed version.
+If you'd prefer to work offline, fill out the [Intake Template](https://github.com/rsdighe76/claude-skills/blob/master/INTAKE-TEMPLATE.md) with your API details and paste it along with your spec. See the [Intake Example](https://github.com/rsdighe76/claude-skills/blob/master/INTAKE-EXAMPLE.md) for a completed version.
 
 **Option C: Just provide the spec — I'll ask questions as we go**
 

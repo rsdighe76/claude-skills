@@ -311,14 +311,6 @@ Why: [consequence if ignored]
 Recommendation: [how to fix — before/after code]
 Note: If you have a valid reason to deviate, acknowledge and proceed.
 ```
-
-## Top Gotchas
-
-[3–5 API-specific surprises extracted from the spec or intake. These are the things that catch developers at 11pm. Examples:]
-
-1. [e.g. "POST /customers is NOT idempotent — always check-then-create, never retry blindly"]
-2. [e.g. "DELETE /customers is permanent and irreversible — there is no undo"]
-3. [e.g. "Store the Idempotency-Key BEFORE calling the API, not after — if the process crashes mid-flight, you need that key to retry safely"]
 ```
 
 ---

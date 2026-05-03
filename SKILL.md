@@ -246,6 +246,7 @@ Create the output directory in the user's current working directory (or ask the 
 [your-api]-best-practices/
   SKILL.md                    (main orchestrator)
   shared/
+    authentication.md         (credentials, token setup, env vars, scopes)
     error-codes.md            (global error format, universal status codes, retry rules)
     workflows.md              (multi-step patterns: creation, pagination, lifecycle, teardown, recovery)
   endpoints/
@@ -288,11 +289,13 @@ Validates and guides [Your API] integrations. Paste a request, code snippet, or 
 |---|---|
 | [Developer goal 1 — e.g. "Creating or looking up a customer"] | `endpoints/[domain1]-endpoints.md` |
 | [Developer goal 2 — e.g. "Placing or managing an order"] | `endpoints/[domain2]-endpoints.md` |
+| Setting up credentials, tokens, or auth | `shared/authentication.md` |
 | Handling errors, retries, or rate limits | `shared/error-codes.md` |
 | Multi-step workflows or lifecycle patterns | `shared/workflows.md` |
 
 ## When to Load Which File
 
+- **Auth setup, credentials, token acquisition** → load `shared/authentication.md`
 - **Error codes, retry logic, rate limits** → load `shared/error-codes.md`
 - **Multi-step workflows, lifecycle patterns** → load `shared/workflows.md`
 - **[Domain 1 operations]** → load the relevant `endpoints/` file
@@ -464,6 +467,64 @@ All errors from [Your API] follow this format:
 
 ---
 
+**File 3: shared/authentication.md**
+
+Generate this file once. It covers everything a developer needs to set up credentials and make their first authenticated call — nothing more.
+
+```markdown
+# [Your API] — Authentication
+
+Read this file when: you are setting up credentials for the first time, getting 401 errors, or need to know which scopes to request.
+
+## Credentials Setup
+
+Set these environment variables before running any code:
+
+```bash
+export [YOUR_API]_CLIENT_ID=your_client_id
+export [YOUR_API]_CLIENT_SECRET=your_client_secret
+export [YOUR_API]_BASE_URL=[base_url_from_spec]
+```
+
+## Getting a Token
+
+[Your API] uses [auth method from spec — e.g. OAuth2 Client Credentials]:
+
+```bash
+curl -X POST "[token_url]" \
+  -d "grant_type=client_credentials" \
+  -d "client_id=$[YOUR_API]_CLIENT_ID" \
+  -d "client_secret=$[YOUR_API]_CLIENT_SECRET" \
+  -d "scope=[list required scopes]"
+```
+
+Extract `access_token` from the response and pass it as a Bearer header on every request:
+
+```bash
+-H "Authorization: Bearer $ACCESS_TOKEN"
+```
+
+## Scopes
+
+| Scope | What it grants |
+|-------|---------------|
+| `[scope_1]` | [what it allows] |
+| `[scope_2]` | [what it allows] |
+
+Request only the scopes your integration needs.
+
+## Verifying Credentials
+
+[If there is a health/verify endpoint: describe it. If not: suggest the lightest read endpoint as a credential check.]
+
+## Common Auth Errors
+
+- **401** — token missing, expired, or malformed; re-fetch a token and retry
+- **403** — token valid but missing required scope; re-request with correct scopes
+```
+
+---
+
 **File 4: shared/workflows.md**
 
 Generate this file by identifying the multi-step patterns a developer actually needs to accomplish real goals with this API. Don't just list endpoints — show how they chain together.
@@ -592,10 +653,11 @@ For endpoints that **do not support idempotency** (e.g. POST /customers):
 Write all files directly to disk:
 1. Create `[your-api]-best-practices/`, `shared/`, and `endpoints/` in the user's current working directory (or ask for a preferred path)
 2. Write the main `SKILL.md`
-3. Write `shared/error-codes.md`
-4. Write `shared/workflows.md`
-5. Write every endpoint file into `endpoints/`
-6. Confirm with a file listing and total count
+3. Write `shared/authentication.md`
+4. Write `shared/error-codes.md`
+5. Write `shared/workflows.md`
+6. Write every endpoint file into `endpoints/`
+7. Confirm with a file listing and total count
 
 ---
 
@@ -611,6 +673,7 @@ Directory structure:
 [your-api]-best-practices/
   SKILL.md
   shared/
+    authentication.md
     error-codes.md
     workflows.md
   endpoints/
@@ -627,19 +690,25 @@ Then output each file as a clearly labelled block, in this order: SKILL.md first
 ```
 
 ---
-**File 2 of [N]: `[your-api]-best-practices/shared/error-codes.md`**
+**File 2 of [N]: `[your-api]-best-practices/shared/authentication.md`**
 ```markdown
 [COMPLETE FILE CONTENT]
 ```
 
 ---
-**File 3 of [N]: `[your-api]-best-practices/shared/workflows.md`**
+**File 3 of [N]: `[your-api]-best-practices/shared/error-codes.md`**
 ```markdown
 [COMPLETE FILE CONTENT]
 ```
 
 ---
-**File 4 of [N]: `[your-api]-best-practices/endpoints/POST-v1-example.md`**
+**File 4 of [N]: `[your-api]-best-practices/shared/workflows.md`**
+```markdown
+[COMPLETE FILE CONTENT]
+```
+
+---
+**File 5 of [N]: `[your-api]-best-practices/endpoints/POST-v1-example.md`**
 ```markdown
 [COMPLETE FILE CONTENT]
 ```

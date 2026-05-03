@@ -226,6 +226,19 @@ For each endpoint that varies, ask:
 - What are the required fields (always required)?
 - What are context-dependent fields (required for EMEA, Enterprise, specific use cases)?
 
+**Deployment target — always ask:**
+
+```
+Where will this skill be used?
+A) Claude Code (local file access — relative paths work)
+B) Claude.ai Project (no local files — needs GitHub raw URLs)
+
+If Claude.ai: what is the GitHub repo URL where the generated files will be committed?
+(e.g. https://github.com/yourorg/your-repo — branch defaults to main)
+```
+
+Store the answer as `DEPLOYMENT_TARGET` (code or claude_ai) and `GITHUB_RAW_BASE` if provided. This determines how routing table URLs are generated in the SKILL.md hub.
+
 ---
 
 **IMPORTANT FLOW:**
@@ -283,23 +296,47 @@ description: "TRIGGER when: [specific phrases a developer says when stuck — in
 
 Validates and guides [Your API] integrations. Paste a request, code snippet, or describe what you're building — I'll load the relevant file and validate or guide.
 
+[IF DEPLOYMENT_TARGET = claude_ai — use GitHub raw URLs in the routing table so Claude.ai can fetch them:]
+
+**IMPORTANT:** Before validating any request or code, fetch the relevant file URL below using your web browsing capability. Do not validate without first retrieving the file content.
+
+## What Are You Building?
+
+| Building... | Fetch this URL |
+|---|---|
+| [Developer goal 1] | `https://raw.githubusercontent.com/[org]/[repo]/[branch]/[your-api]-best-practices/endpoints/[file].md` |
+| [Developer goal 2] | `https://raw.githubusercontent.com/[org]/[repo]/[branch]/[your-api]-best-practices/endpoints/[file].md` |
+| Setting up credentials, tokens, or auth | `https://raw.githubusercontent.com/[org]/[repo]/[branch]/[your-api]-best-practices/shared/authentication.md` |
+| Handling errors, retries, or rate limits | `https://raw.githubusercontent.com/[org]/[repo]/[branch]/[your-api]-best-practices/shared/error-codes.md` |
+| Multi-step workflows or lifecycle patterns | `https://raw.githubusercontent.com/[org]/[repo]/[branch]/[your-api]-best-practices/shared/workflows.md` |
+
+## When to Load Which File
+
+- **Auth setup** → fetch `shared/authentication.md` URL above
+- **Error codes, retry logic** → fetch `shared/error-codes.md` URL above
+- **Multi-step workflows** → fetch `shared/workflows.md` URL above
+- **Any endpoint** → fetch the matching URL from the table above
+
+[IF DEPLOYMENT_TARGET = code — use relative paths:]
+
 ## What Are You Building?
 
 | Building... | Load this file |
 |---|---|
-| [Developer goal 1 — e.g. "Creating or looking up a customer"] | `endpoints/[domain1]-endpoints.md` |
-| [Developer goal 2 — e.g. "Placing or managing an order"] | `endpoints/[domain2]-endpoints.md` |
+| [Developer goal 1] | `endpoints/[file].md` |
+| [Developer goal 2] | `endpoints/[file].md` |
 | Setting up credentials, tokens, or auth | `shared/authentication.md` |
 | Handling errors, retries, or rate limits | `shared/error-codes.md` |
 | Multi-step workflows or lifecycle patterns | `shared/workflows.md` |
 
 ## When to Load Which File
 
-- **Auth setup, credentials, token acquisition** → load `shared/authentication.md`
-- **Error codes, retry logic, rate limits** → load `shared/error-codes.md`
-- **Multi-step workflows, lifecycle patterns** → load `shared/workflows.md`
-- **[Domain 1 operations]** → load the relevant `endpoints/` file
-- **[Domain 2 operations]** → load the relevant `endpoints/` file
+- **Auth setup** → load `shared/authentication.md`
+- **Error codes, retry logic** → load `shared/error-codes.md`
+- **Multi-step workflows** → load `shared/workflows.md`
+- **Any endpoint** → load the matching file from the table above
+
+[END BRANCH]
 
 Validate a **single request (curl/JSON)** → check request structure only.
 Validate **full code** → check request + error handling + retries + timeouts.

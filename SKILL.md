@@ -245,6 +245,7 @@ Create the output directory in the user's current working directory (or ask the 
   SKILL.md                    (main orchestrator)
   shared/
     error-codes.md            (global error format, universal status codes, retry rules)
+    workflows.md              (multi-step patterns: creation, pagination, lifecycle, teardown, recovery)
   endpoints/
     POST-v1-payment-intents.md
     POST-v1-customers.md
@@ -308,6 +309,7 @@ curl -X POST "https://api.example.com/v1/payment_intents" \
 
 3. **Load endpoint-specific best practices** from the `endpoints/` directory
    - For error handling questions, also load `shared/error-codes.md`
+   - For multi-step or workflow questions, also load `shared/workflows.md`
 
 4. **Run validation checks** based on input type:
    - **Request-level:** Authentication, required fields, idempotency headers
@@ -574,6 +576,127 @@ All errors from [Your API] follow this format:
 
 ---
 
+**File 4: shared/workflows.md**
+
+Generate this file by identifying the multi-step patterns a developer actually needs to accomplish real goals with this API. Don't just list endpoints — show how they chain together.
+
+**Identify workflows by asking these questions about the spec:**
+- What is the canonical "happy path" from zero to first value? (create entity → attach resource → confirm state)
+- What lookups are commonly done by attribute instead of ID? (find by email before creating)
+- What multi-step state transitions does the lifecycle require, and in what order?
+- What cleanup or teardown sequences exist, and what must happen first? (cancel children before deleting parent)
+- What retry or recovery patterns should a developer know when an operation fails mid-workflow?
+
+**Minimum workflows to generate for any CRUD API:**
+1. Entity creation with duplicate prevention (check-then-create pattern)
+2. Full pagination across a list endpoint
+3. Lifecycle advancement (moving a resource through its status states)
+4. Teardown/deletion with prerequisite cleanup
+5. Error recovery / retry for a failed write
+
+**Add API-specific workflows** whenever the spec reveals: webhooks, batch operations, multi-resource linking, async job polling, or any operation that is obviously unsafe to call naively (e.g. a delete that cascades).
+
+**For each workflow, include:**
+- A short title and one-line "when to use this" note
+- Numbered steps with exact method + path for each API call
+- What data to extract from each response and pass to the next call
+- Any precondition checks (e.g. "check if resource exists before creating")
+- Any ordering constraints enforced server-side
+- What can go wrong mid-workflow and how to recover
+- Code or pseudocode for workflows involving loops or conditional branching (pagination, polling, retry-with-backoff); numbered prose for linear workflows
+
+**Tone:** write as a senior engineer explaining to a teammate who knows REST but doesn't know this API. Assume competence, skip basics, emphasize the non-obvious.
+
+```markdown
+# [Your API] — Common Workflows
+
+## 1. Create [Entity] Without Duplicates
+
+**When to use:** First time onboarding a [entity], or when you can't guarantee the create hasn't already been called.
+
+1. `GET /[entities]?[unique_attribute]=<value>` — check if it already exists
+   - If response `data` array is non-empty → use the existing ID, skip to step 3
+   - If empty → proceed to step 2
+2. `POST /[entities]` — create the entity
+   - Extract `id` from the response
+3. Continue with the returned ID
+
+**Recovery:** If step 2 fails mid-flight, re-run step 1 before retrying — the entity may have been created.
+
+---
+
+## 2. Paginate Through All [Entities]
+
+**When to use:** Any time you need the full list, not just the first page.
+
+```python
+cursor = None
+results = []
+while True:
+    params = {"limit": [MAX_PAGE_SIZE]}
+    if cursor:
+        params["cursor"] = cursor
+    response = GET /[entities] with params
+    results.extend(response["data"])
+    cursor = response.get("next_cursor")
+    if not cursor:
+        break
+```
+
+**Note:** Always use `limit=[MAX_PAGE_SIZE]` to minimise the number of round trips.
+
+---
+
+## 3. Advance [Entity] Through Lifecycle
+
+**When to use:** Moving a [entity] from [initial_state] → [next_state] → [final_state].
+
+Valid transitions:
+- `[state_a]` → `[state_b]`: [meaning]
+- `[state_b]` → `[state_c]`: [meaning]
+
+Steps:
+1. `GET /[entities]/{id}` — confirm current status before transitioning
+2. `PATCH /[entities]/{id}` with `{"status": "[next_state]"}` and `Idempotency-Key`
+   - Extract updated `status` from response to confirm transition succeeded
+
+**Constraint:** [Any server-enforced ordering, e.g. "must reach paid before fulfilled"]
+
+**Recovery:** If the PATCH fails, reuse the same `Idempotency-Key` on retry — the server will return the original result if the transition already happened.
+
+---
+
+## 4. Delete [Entity] Safely
+
+**When to use:** Removing a [entity] and ensuring prerequisites are met first.
+
+1. `GET /[entities]/{id}` — confirm it exists and check current state
+2. [Any prerequisite cleanup — e.g. cancel child resources first]
+3. `DELETE /[entities]/{id}`
+   - Expect `204 No Content` — do not parse a response body
+
+**Warning:** [Note any irreversibility — e.g. "This is permanent. There is no undo."]
+
+---
+
+## 5. Recover a Failed Write
+
+**When to use:** A POST or PATCH returned a network error or 5xx and you don't know if it succeeded.
+
+For endpoints that **support idempotency** (`Idempotency-Key`):
+1. Reuse the same key you sent originally
+2. Retry the exact same request — the server returns the cached result if it already succeeded
+
+For endpoints that **do not support idempotency** (e.g. POST /customers):
+1. `GET /[entities]?[unique_attribute]=<value>` — check if the resource was created
+2. If found → use the existing resource, do not retry the POST
+3. If not found → retry the POST with a new request
+
+[Add more API-specific workflows here if the spec reveals webhooks, batch ops, multi-resource linking, etc.]
+```
+
+---
+
 ## Step 6: Deliver ALL Files
 
 **If file-writing tools are available (e.g., running in Claude Code):**
@@ -582,8 +705,9 @@ Write all files directly to disk:
 1. Create `[your-api]-best-practices/`, `shared/`, and `endpoints/` in the user's current working directory (or ask for a preferred path)
 2. Write the main `SKILL.md`
 3. Write `shared/error-codes.md`
-4. Write every endpoint file into `endpoints/`
-5. Confirm with a file listing and total count
+4. Write `shared/workflows.md`
+5. Write every endpoint file into `endpoints/`
+6. Confirm with a file listing and total count
 
 ---
 
@@ -600,6 +724,7 @@ Directory structure:
   SKILL.md
   shared/
     error-codes.md
+    workflows.md
   endpoints/
     POST-v1-example.md
     ... (one per endpoint)
@@ -620,7 +745,13 @@ Then output each file as a clearly labelled block, in this order: SKILL.md first
 ```
 
 ---
-**File 3 of [N]: `[your-api]-best-practices/endpoints/POST-v1-example.md`**
+**File 3 of [N]: `[your-api]-best-practices/shared/workflows.md`**
+```markdown
+[COMPLETE FILE CONTENT]
+```
+
+---
+**File 4 of [N]: `[your-api]-best-practices/endpoints/POST-v1-example.md`**
 ```markdown
 [COMPLETE FILE CONTENT]
 ```

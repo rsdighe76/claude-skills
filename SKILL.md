@@ -1,6 +1,6 @@
 ---
 name: api-best-practice-skill-creator
-description: "Create or update API best practice documentation from an OpenAPI spec. Generates per-endpoint validation skills for authentication, errors, retries, rate limits, and idempotency."
+description: "TRIGGER when: user wants to create or update an API best practice skill, generate integration docs from an OpenAPI spec, build a validator for a specific API, document error handling or retry patterns, or create context-dependent field requirements for a specific API. DO NOT TRIGGER when: user is asking about general REST concepts, authentication theory, or wants to validate code against an already-generated API skill."
 ---
 
 # API Best Practice Skill Creator
@@ -78,6 +78,8 @@ If you don't have a spec, create one first or use a tool like Swagger Editor to 
 **If the user asks to generate a customized intake template** (Option A), proceed to Step 1b below.
 
 **If the user provides just the spec with no template** (Option C), proceed to Step 2 below.
+
+**API version check:** When parsing the spec, extract the version from `info.version`. If the spec doesn't declare a version, ask the user before generating: "What API version should this skill target? This will appear as line 1 of the generated SKILL.md." Never omit or bury the version.
 
 ---
 
@@ -253,7 +255,14 @@ Create the output directory in the user's current working directory (or ask the 
     ... (one file per endpoint)
 ```
 
-**Before finalizing:** Search all generated files for `example.com` and other placeholder URLs — replace every occurrence with the user's actual API domain. Placeholder leakage is a common mistake.
+**Before delivering any file, scan every generated file for placeholder leakage.** Search for all of the following strings and replace with the user's actual values from their spec or intake:
+
+- `example.com` / `api.example.com`
+- `YOUR_API` / `[YOUR_API_NAME]` / `[API Name]` / `[Your API]`
+- `sk_test_123` / `<your-key>` / `your_token_here`
+- Any remaining template brackets: `[` or `]` in content (not in markdown tables or code comments)
+
+After replacing, report to the user: **"0 placeholder leaks found"** or **"Fixed N placeholder leaks."** Never deliver files with placeholder leakage.
 
 **Optional — Language-specific examples:** Ask the user if they want code examples in specific languages (Python, Node.js, Go, etc.) in addition to curl. If yes, include language-specific snippets in the endpoint files alongside the curl examples.
 
@@ -261,251 +270,138 @@ Create the output directory in the user's current working directory (or ask the 
 
 **File 1: SKILL.md (Main Orchestrator)**
 
+Keep this file under 150 lines. It is a routing hub — not a manual. If you find yourself writing a paragraph here, it belongs in a reference file instead.
+
 ```markdown
 ---
 name: [your-api]-best-practices
-description: "Best practices for integrating with [Your API]. Use when: implementing [Your API] integration, handling [Your API] errors, setting up [Your API] webhooks, troubleshooting [Your API] issues."
+description: "TRIGGER when: [specific phrases a developer says when stuck — include error codes, endpoint names, operation names, workflow names. Examples: 'I keep getting [error_code] on [operation]', 'how do I [workflow_name]', 'POST /[path] is returning [error]', '[operation] failing']. Always consult this skill before writing any [API Name] integration code — do not guess at endpoints, fields, or auth. DO NOT TRIGGER when: user is asking about general REST concepts, authentication theory, or a different API provider."
 ---
 
-# [Your API] Integration Best Practices
+**API version:** [X.Y.Z from spec `info.version`]. Always use this version unless the user specifies otherwise.
 
-## How to Use This Skill
+Validates and guides [Your API] integrations. Paste a request, code snippet, or describe what you're building — I'll load the relevant file and validate or guide.
 
-**This skill validates your API integration against [Your API]'s best practices.**
+## What Are You Building?
 
-**To use, provide one of the following:**
-1. Copy/paste your API request (curl, JSON, HTTP format)
-2. Upload a file with your integration code
-3. Copy/paste your code snippet
+| Building... | Load this file |
+|---|---|
+| [Developer goal 1 — e.g. "Creating or looking up a customer"] | `endpoints/[domain1]-endpoints.md` |
+| [Developer goal 2 — e.g. "Placing or managing an order"] | `endpoints/[domain2]-endpoints.md` |
+| Handling errors, retries, or rate limits | `shared/error-codes.md` |
+| Multi-step workflows or lifecycle patterns | `shared/workflows.md` |
 
-**Authoritative Source:**
-- This skill uses ONLY the best practices defined in this skill
-- All validation rules come from the official API specification
-- No web searches or external docs - ensuring accuracy
+## When to Load Which File
 
-**What happens next:**
-1. I'll identify which endpoint(s) you're calling
-2. Load the best practices for that endpoint
-3. Validate your implementation
-4. Report any issues with specific recommendations
+- **Error codes, retry logic, rate limits** → load `shared/error-codes.md`
+- **Multi-step workflows, lifecycle patterns** → load `shared/workflows.md`
+- **[Domain 1 operations]** → load the relevant `endpoints/` file
+- **[Domain 2 operations]** → load the relevant `endpoints/` file
 
-**Example:**
-```bash
-curl -X POST "https://api.example.com/v1/payment_intents" \
-  -H "Authorization: Bearer sk_test_123" \
-  -d '{"amount": 1000, "currency": "usd"}'
+Validate a **single request (curl/JSON)** → check request structure only.
+Validate **full code** → check request + error handling + retries + timeouts.
+
+## Validation Format
+
+All findings use this format:
+
+```
+⚠️ Issue: [what is wrong]
+Why: [consequence if ignored]
+Recommendation: [how to fix — before/after code]
+Note: If you have a valid reason to deviate, acknowledge and proceed.
+```
+
+## Top Gotchas
+
+[3–5 API-specific surprises extracted from the spec or intake. These are the things that catch developers at 11pm. Examples:]
+
+1. [e.g. "POST /customers is NOT idempotent — always check-then-create, never retry blindly"]
+2. [e.g. "DELETE /customers is permanent and irreversible — there is no undo"]
+3. [e.g. "Store the Idempotency-Key BEFORE calling the API, not after — if the process crashes mid-flight, you need that key to retry safely"]
 ```
 
 ---
 
-## Analysis Process
+**File 2: endpoints/POST-v1-[example].md (Endpoint File Format)**
 
-**When you provide your code, I will:**
-
-1. **Identify which endpoint(s)** you're calling
-2. **Determine input type:**
-   - Single API request (curl/JSON) → Validate request structure only
-   - Full code implementation → Validate everything (request + error handling + retries + timeouts)
-
-3. **Load endpoint-specific best practices** from the `endpoints/` directory
-   - For error handling questions, also load `shared/error-codes.md`
-   - For multi-step or workflow questions, also load `shared/workflows.md`
-
-4. **Run validation checks** based on input type:
-   - **Request-level:** Authentication, required fields, idempotency headers
-   - **Code-level:** Error handling, retry logic, rate limiting, timeouts (for full code only)
-
-5. **Report findings** using this format:
-   ```
-   ⚠️  Issue: [What's wrong]
-   Why: [Consequence]
-   Recommendation: [How to fix - code snippet]
-   ```
-
-6. **Summary:** Count of issues by category
-
-**Philosophy:**
-- These are recommendations, not requirements
-- You may have valid reasons to deviate
-- If you acknowledge a finding and choose to proceed, that's acceptable
-
-**If user says they want to ignore a recommendation:**
-- Acknowledge the decision
-- Move on to other aspects
-
----
-
-## Endpoints
-
-This API has the following endpoints (each has detailed best practices in `endpoints/` directory):
-
-[LIST ALL ENDPOINTS HERE - auto-generated from OpenAPI spec]
-- POST /v1/payment_intents → See endpoints/POST-v1-payment-intents.md
-- POST /v1/customers → See endpoints/POST-v1-customers.md
-- GET /v1/customers/{id} → See endpoints/GET-v1-customers-{id}.md
-...
-
-When you provide your code, I'll automatically load the relevant endpoint file(s).
-```
-
----
-
-**File 2: endpoints/POST-v1-payment-intents.md (Example Endpoint File in Conversational Format)**
-
-Use this conversational format for each endpoint file:
+Use this format for every endpoint file. Open with one sentence — what the endpoint does and when to read this file. Show the working example first. Gotchas second. Field reference last. Never open with a table.
 
 ```markdown
-# POST /v1/payment_intents
+# POST /v1/[endpoint]
 
-## What You Need to Know
+Read this file when: you are calling POST /v1/[endpoint] and want to know what's required, what can go wrong, or how to retry safely.
 
-**This endpoint creates a payment intent. It requires idempotency because duplicate payments are costly.**
+## The Working Request
 
-### Quick checklist
+Here's a correct, complete request:
 
-When you call this endpoint, make sure you:
-1. Include an `Authorization: Bearer` header with your API key
-2. **Include an `Idempotency-Key` header** (see below - this is critical)
-3. Include `amount` and `currency` in the request body
-4. Include `external_id` if you're an Enterprise customer
-5. Include `gdpr_consent: true` if serving EMEA customers
-
-### About Idempotency
-
-This endpoint **requires** an idempotency key because payment failures could cause duplicate charges.
-
-Add a header like this:
 ```bash
--H "Idempotency-Key: pi_abc123"
-```
-
-Generate unique keys using UUID or similar:
-```python
-import uuid
-key = f"pi_{uuid.uuid4()}"
-```
-
-The idempotency window is **24 hours**. Reusing the same key within 24 hours returns the cached result.
-
-### Example: Good Request
-
-Here's a complete, correct request:
-```bash
-curl -X POST "https://api.example.com/v1/payment_intents" \
-  -H "Authorization: Bearer sk_live_abc123" \
-  -H "Idempotency-Key: pi_550e8400" \
+curl -X POST "https://[actual-api-domain]/v1/[endpoint]" \
+  -H "Authorization: Bearer $[YOUR_API]_TOKEN" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -H "Content-Type: application/json" \
   -d '{
-    "amount": 1000,
-    "currency": "usd",
-    "external_id": "order_789"
+    "[required_field_1]": [value],
+    "[required_field_2]": [value]
   }'
 ```
 
-### Example: Common Mistakes ❌
+## Gotchas
+
+The non-obvious things that catch developers by surprise:
+
+- **[Gotcha 1]** — [why it matters and what goes wrong if you miss it]
+- **[Gotcha 2]** — [e.g. "Idempotency key must be stored before the call — if your process crashes, you need that key to retry"]
+- **[Gotcha 3]** — [context-dependent fields: "If billing_country is in EU, vat_number is required or the request will be rejected"]
+
+## What Fails ❌
 
 ```bash
-# Missing idempotency key - risky!
-# Missing external_id for enterprise
-curl -X POST "https://api.example.com/v1/payment_intents" \
-  -H "Authorization: Bearer sk_test_123" \
-  -d '{"amount": 1000, "currency": "usd"}'
+# [Describe what's wrong in comment]
+curl -X POST "https://[actual-api-domain]/v1/[endpoint]" \
+  -H "Authorization: Bearer $[YOUR_API]_TOKEN" \
+  -d '{"[missing or wrong field]": [value]}'
 ```
 
-### Required Fields
+## Required Fields
 
 **Always required:**
-- `amount` (integer) - Amount in cents
-- `currency` (string) - Three-letter ISO code (e.g., "usd", "eur")
+- `[field]` ([type]) — [what it is]
 
-**Context-dependent (may be required):**
-- `gdpr_consent` (boolean) - Required for EMEA customers
-- `external_id` (string) - Required for Enterprise customers
-- `payment_method_data.card.cvc` - Required when payment_method=card
+**Context-dependent:**
+- `[field]` ([type]) — required when [condition]
 
-### For Full Code Implementations
+**Do NOT send:**
+- `[field]` — [why, e.g. "computed server-side"]
 
-If you're writing integration code (not just testing with curl), also make sure to:
+## For Full Code Implementations
 
 **Error handling:**
-- Check the response status code before parsing the response
 - For global error codes, retry rules, and error format: see `shared/error-codes.md`
-- Endpoint-specific errors for this operation:
-  - `400 invalid_parameter` — `amount` or `currency` missing or wrong type
-  - `409 idempotency_conflict` — same key used with different parameters
+- Endpoint-specific errors:
+  - `[status] [code]` — [when this happens and what to do]
 
-**Timeouts:**
-- Set a 30-second timeout for this endpoint
+**Timeout:** [N] seconds.
 
-**Rate limits:**
-- This endpoint uses the global rate limit: 100 requests/minute
-- Check `X-RateLimit-Remaining` header to track usage
-- When you hit 429, wait for `Retry-After` seconds
+**Rate limit:** [N] requests/minute ([bucket name]).
 
-### What This Skill Validates
+## What This Skill Validates
 
 **Request-level checks (applies to curl and code):**
-- ✓ Authentication header present
-- ✓ Idempotency-Key header present
-- ✓ Required fields (amount, currency) included
-- ✓ Context fields included when needed (gdpr_consent, external_id)
+- ✓ [check 1 — e.g. Authorization header present with correct scope]
+- ✓ [check 2 — e.g. Idempotency-Key header present and 8–128 chars]
+- ✓ [check 3 — e.g. required fields included]
+- ✓ [check 4 — e.g. context-dependent fields included when condition applies]
 
 **Code-level checks (full implementations only):**
-- ✓ Response status checked before parsing
-- ✓ Error handling for 400, 429, 5xx
-- ✓ Retry logic with exponential backoff
-- ✓ Appropriate timeout set (30s)
-
----
-
-## Validation Execution
-
-**When I analyze your code, I will:**
-
-1. Check if you provided a single request or full code
-2. Run request-level checks for both
-3. Run code-level checks only for full code
-4. Report ALL issues found using this format:
-
-```
-⚠️  Issue: Missing Idempotency-Key header
-Why: Duplicate requests may create multiple charges if network fails
-Recommendation: Add this header:
-
-Before:
-curl -X POST "https://api.example.com/v1/payment_intents" \
-  -H "Authorization: Bearer sk_live_123" \
-  -d '{"amount": 1000, "currency": "usd"}'
-
-After:
-curl -X POST "https://api.example.com/v1/payment_intents" \
-  -H "Authorization: Bearer sk_live_123" \
-  -H "Idempotency-Key: pi_$(uuidgen)" \
-  -d '{"amount": 1000, "currency": "usd"}'
-
-Note: If you're handling idempotency at a different layer (load balancer, API gateway),
-you can acknowledge and proceed.
+- ✓ [check 1 — e.g. timeout set to N seconds]
+- ✓ [check 2 — e.g. 4xx vs 5xx handled separately]
+- ✓ [check 3 — e.g. Retry-After header respected on 429]
+- ✓ [check 4 — e.g. idempotency key stored before call, not generated inline]
 ```
 
-**Philosophy:**
-- These are recommendations to help you integrate successfully
-- You may have valid architectural reasons for different implementations
-- If you acknowledge a finding and choose to proceed, that's acceptable
-
-```
-
----
-
-**For each endpoint in your API, create a similar file using the conversational format above.**
-
-Key elements of the conversational format:
-1. **What You Need to Know** - Plain language explanation
-2. **Quick checklist** - Actionable items
-3. **Critical sections first** - e.g., idempotency if required
-4. **Good example** - Shows correct implementation
-5. **Common mistakes** - Shows what NOT to do
-6. **Required fields** - Clear table or list
-7. **For Full Code** - Additional requirements for implementations (reference `shared/error-codes.md` for global errors; list only endpoint-specific errors inline)
-8. **What This Skill Validates** - Clear separation of request vs code checks
+**For each endpoint in your API, create a file following this format.** The key discipline: one sentence open → working example → gotchas → mistakes → fields → validation. Never start with a table or a checklist.
 
 ---
 
@@ -762,8 +658,9 @@ Then output each file as a clearly labelled block, in this order: SKILL.md first
 
 **CRITICAL rules for the chat presentation path:**
 - Show ALL files — never summarize or truncate
-- Always show the main `SKILL.md` first, then endpoint files in order
+- Always show the main `SKILL.md` first, then shared files, then endpoint files in order
 - Include the full file path as the label so the user knows exactly where to save it
+- Report placeholder leakage count before listing files: "0 placeholder leaks found" or "Fixed N placeholder leaks"
 - End with: "All [N] files above. Create the directory structure and copy each file to its path."
 
 ---

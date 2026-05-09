@@ -145,13 +145,22 @@ Produce a template with:
 
 **Phase 4: Present for review**
 
-Present the customized template and say:
+Before presenting the template, list every URL fetched during Phase 2 so the user can verify the sources:
+
+```
+Sources consulted (web):
+- [URL 1] — [what was found there]
+- [URL 2] — [what was found there]
+(If no web sources were consulted, say "No web sources consulted — all fields from spec only.")
+```
+
+Then present the customized template and say:
 ```
 Here's your customized intake template based on your OpenAPI spec
 and public documentation.
 
 Fields marked [auto] were extracted from your spec.
-Fields marked [web] were found in your public docs — please review
+Fields marked [web] were found in the sources listed above — please review
 and correct these, as your internal requirements may differ.
 
 Please fill in any remaining blank fields:
@@ -297,6 +306,8 @@ Create the output directory in the user's current working directory (or ask the 
 
 **Filename convention for path parameters:** strip curly braces from parameter names in filenames. `GET /v1/customers/{customer_id}` → `GET-v1-customers-customer_id.md`. Curly braces are invalid characters in zip/skill bundles on some platforms.
 
+**Before delivering any file, verify SKILL.md starts with `---` on line 1** — no blank lines or text before it. Claude.ai will reject the upload otherwise.
+
 **Before delivering any file, scan every generated file for placeholder leakage.** Search for all of the following strings and replace with the user's actual values from their spec or intake:
 
 - `example.com` / `api.example.com`
@@ -313,6 +324,8 @@ After replacing, report to the user: **"0 placeholder leaks found"** or **"Fixed
 **File 1: SKILL.md (Main Orchestrator)**
 
 Keep this file under 150 lines. It is a routing hub — not a manual. If you find yourself writing a paragraph here, it belongs in a reference file instead.
+
+**CRITICAL — frontmatter rule:** The very first characters of SKILL.md must be `---` on line 1 with nothing before it — no blank lines, no introductory text, no BOM. Claude.ai rejects the file with "SKILL.md must start with YAML frontmatter" if anything precedes the opening `---`. When writing this file, output the `---` as the absolute first thing.
 
 ```markdown
 ---

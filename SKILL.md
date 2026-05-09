@@ -349,6 +349,7 @@ Create the output directory in the user's current working directory (or ask the 
 - `YOUR_API` / `[YOUR_API_NAME]` / `[API Name]` / `[Your API]`
 - `sk_test_123` / `<your-key>` / `your_token_here`
 - Any remaining template brackets: `[` or `]` in content (not in markdown tables or code comments)
+- In SKILL.md frontmatter: flag if `name` still contains `[your-api]` or `<api-name>`, or if `description` still contains `[Your API]`, `[API Name]`, or `<one or two sentences>` — these must be replaced with the actual API name and a real description before delivery.
 
 After replacing, report to the user: **"0 placeholder leaks found"** or **"Fixed N placeholder leaks."** Never deliver files with placeholder leakage.
 
@@ -361,14 +362,33 @@ After replacing, report to the user: **"0 placeholder leaks found"** or **"Fixed
 It is a routing hub — not a manual. If you find yourself writing a paragraph here, it belongs in a reference file instead.
 
 **CRITICAL — frontmatter rule:**
-- The file content begins with `---` on line 1. Nothing before it — no blank lines, no introductory sentence, no ```markdown fence, no BOM.
+- The frontmatter block must be the **very first thing** in SKILL.md — before any headings, text, or content.
+- The file content begins with `---` on line 1. Nothing before it — no blank lines, no introductory sentence, no ` ```markdown ` fence, no BOM.
 - The template below is shown inside a code block for readability only. When writing the file, do NOT include the opening ` ```markdown ` or closing ` ``` ` markers — write only the content inside them.
 - After writing SKILL.md, read back line 1 and confirm it is exactly `---`. If it is not, rewrite the file.
+- `name` must be kebab-case, e.g. `paypal-button-best-practices`, `stripe-payments`, `twilio-sms`.
+- `description` must be specific enough for Claude to know when to activate the skill — include the API name, key actions (e.g. "order creation, capture, webhook verification"), and the kinds of developer questions it answers.
+
+**Bad — will fail on upload:**
+```markdown
+# My API Best Practices Skill       ← ❌ no frontmatter
+**API Version:** v2
+```
+
+**Correct pattern:**
+```markdown
+---
+name: my-api-best-practices
+description: "Use when a developer asks about integrating My API — covers authentication, order creation, error handling, and webhook verification."
+---
+
+# My API Best Practices Skill       ← ✅ frontmatter first, then content
+```
 
 ```markdown
 ---
 name: [your-api]-best-practices
-description: "TRIGGER when: [specific phrases a developer says when stuck — include error codes, endpoint names, operation names, workflow names. Examples: 'I keep getting [error_code] on [operation]', 'how do I [workflow_name]', 'POST /[path] is returning [error]', '[operation] failing']. Always consult this skill before writing any [API Name] integration code — do not guess at endpoints, fields, or auth. DO NOT TRIGGER when: user is asking about general REST concepts, authentication theory, or a different API provider."
+description: "Use when a developer asks about integrating [Your API] — covers [key actions e.g. authentication, order creation, error handling, webhook verification]. Always consult this skill before writing any [API Name] integration code — do not guess at endpoints, fields, or auth."
 ---
 
 **API version:** [X.Y.Z from spec `info.version`]. Always use this version unless the user specifies otherwise.

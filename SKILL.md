@@ -58,7 +58,14 @@ A best practice skill for your API covering:
 
 ### Web Search Rule
 
-**Never search the web without explicit user approval.** At any point in this skill where a web search could occur, you must first show the user a numbered list of the URLs you plan to fetch and wait for them to select which ones to proceed with. Do not fetch any URL — including during intake template generation — until the user has responded with their selection.
+Before fetching any URL or generating any content, you must:
+
+1. List every URL you plan to fetch except the one the user provided to you, numbered
+2. Stop completely — do not fetch, do not generate, do not proceed
+3. Wait for the user to reply with "all", "none", or specific numbers
+4. Only then fetch the approved URLs and continue
+
+This applies at every stage of the workflow, not just the beginning. If you are about to fetch a URL at any point, pause and ask first. Treat every web fetch as requiring explicit approval.
 
 ---
 

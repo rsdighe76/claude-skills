@@ -122,25 +122,30 @@ Parse the spec to extract:
 - Pagination style from response schemas
 - All endpoints from `paths`
 
-**Phase 2: Confirm web search before proceeding**
+**Phase 2: Show planned URLs and let user choose**
 
-Before searching the web, ask the user:
+Before searching the web, determine which URLs you would search based on the API name and spec (e.g. the API's developer docs, rate limit reference, error code pages). Then present the list to the user:
 
 ```
-I've extracted what I can from your spec. To pre-fill additional fields
-(rate limits, retry guidance, idempotency details, etc.) I can search
-[API Name]'s public developer documentation.
+I can search the following public URLs to pre-fill additional fields
+(rate limits, retry guidance, idempotency details, etc.):
 
-May I search the web for public docs? (yes / no / tell me which URLs first)
+1. [URL] — rate limits and throttling docs
+2. [URL] — error code reference
+3. [URL] — authentication and token guide
+...
+
+Reply with:
+- "all" to search all of them
+- "none" to skip web search entirely
+- specific numbers (e.g. "1, 3") to search only those
 ```
 
 **[WAIT FOR USER RESPONSE]**
 
-- If **no** — skip to Phase 3, leave web-sourced fields blank
-- If **yes** — proceed with web search below
-- If **tell me which URLs first** — list the URLs you plan to search, wait for confirmation, then search
+Only fetch the URLs the user approved. Skip the rest and leave those fields blank in the template.
 
-**Phase 2b: Enrich from public documentation**
+**Phase 2b: Enrich from approved URLs**
 
 Search the web for the API's public developer documentation to pre-fill additional details. Look for:
 - Rate limit documentation (requests per minute, burst limits, rate limit headers)

@@ -7,6 +7,31 @@ description: "TRIGGER when: user wants to create or update an API best practice 
 
 Create or update best practice documentation tailored to your specific API. This guide helps PMs, Solution Engineers, Architects, Developer Evangelist and Developer Relations teams or other such folks build comprehensive best practice skills that ensure developers integrate correctly from the start or use it as a validator upon integration. 
 
+## On First Invocation
+
+**If the user has not yet provided an API spec or intake template, immediately present this welcome message — do not wait for them to ask:**
+
+---
+
+Welcome! I create best practice documentation tailored to your specific API — covering authentication, error handling, retries, rate limits, idempotency, and per-endpoint requirements.
+
+To get started I need your OpenAPI or Swagger spec. Choose one of three paths:
+
+**Option A — Generate a customized intake template (recommended)**
+Paste or link your spec and say "generate an intake template." I'll pre-fill a template with your actual endpoints, auth method, and error format — you just fill in the gaps.
+
+**Option B — Fill out the template manually**
+Download the [Intake Template](https://github.com/rsdighe76/claude-skills/blob/master/INTAKE-TEMPLATE.md) and paste it back with your spec.
+
+**Option C — Just give me the spec**
+Share your spec and I'll ask questions as we go — no prep needed.
+
+**Accepted formats:** OpenAPI 3.x or Swagger 2.0 (JSON/YAML), a URL to a hosted spec, or pasted content.
+
+Please share your API spec to begin.
+
+---
+
 ## What This Skill Creates
 
 A best practice skill for your API covering:
@@ -230,14 +255,15 @@ For each endpoint that varies, ask:
 
 ```
 Where will this skill be used?
-A) Claude Code (local file access — relative paths work)
-B) Claude.ai Project (no local files — needs GitHub raw URLs)
+A) Claude Code (CLI / IDE extension — files live on disk, relative paths work)
+B) Claude.ai Project (upload all files directly to the Project)
 
-If Claude.ai: what is the GitHub repo URL where the generated files will be committed?
-(e.g. https://github.com/yourorg/your-repo — branch defaults to main)
+Both options use relative paths in SKILL.md. The difference is delivery:
+- Claude Code: files stay on disk in the generated directory
+- Claude.ai: you upload every file (SKILL.md + all endpoints/ + shared/) to the Project knowledge base
 ```
 
-Store the answer as `DEPLOYMENT_TARGET` (code or claude_ai) and `GITHUB_RAW_BASE` if provided. This determines how routing table URLs are generated in the SKILL.md hub.
+Store the answer as `DEPLOYMENT_TARGET` (code or claude_ai). Both targets use identical relative-path routing in SKILL.md — no GitHub raw URLs needed.
 
 ---
 
@@ -265,9 +291,11 @@ Create the output directory in the user's current working directory (or ask the 
   endpoints/
     POST-v1-payment-intents.md
     POST-v1-customers.md
-    GET-v1-customers-{id}.md
+    GET-v1-customers-id.md    (no curly braces — use plain param name, e.g. customer_id not {customer_id})
     ... (one file per endpoint)
 ```
+
+**Filename convention for path parameters:** strip curly braces from parameter names in filenames. `GET /v1/customers/{customer_id}` → `GET-v1-customers-customer_id.md`. Curly braces are invalid characters in zip/skill bundles on some platforms.
 
 **Before delivering any file, scan every generated file for placeholder leakage.** Search for all of the following strings and replace with the user's actual values from their spec or intake:
 
@@ -294,34 +322,13 @@ description: "TRIGGER when: [specific phrases a developer says when stuck — in
 
 **API version:** [X.Y.Z from spec `info.version`]. Always use this version unless the user specifies otherwise.
 
-Validates and guides [Your API] integrations. Paste a request, code snippet, or describe what you're building — I'll load the relevant file and validate or guide.
+Validates and guides [Your API] integrations. Paste a request, code snippet, or describe what you're building — I'll read the relevant file and validate or guide.
 
-[IF DEPLOYMENT_TARGET = claude_ai — use GitHub raw URLs in the routing table so Claude.ai can fetch them:]
-
-**IMPORTANT:** Before validating any request or code, fetch the relevant file URL below using your web browsing capability. Do not validate without first retrieving the file content.
+**IMPORTANT:** Before validating any request or code, read the relevant file from the table below. Do not validate without first reading the file content.
 
 ## What Are You Building?
 
-| Building... | Fetch this URL |
-|---|---|
-| [Developer goal 1] | `https://raw.githubusercontent.com/[org]/[repo]/[branch]/[your-api]-best-practices/endpoints/[file].md` |
-| [Developer goal 2] | `https://raw.githubusercontent.com/[org]/[repo]/[branch]/[your-api]-best-practices/endpoints/[file].md` |
-| Setting up credentials, tokens, or auth | `https://raw.githubusercontent.com/[org]/[repo]/[branch]/[your-api]-best-practices/shared/authentication.md` |
-| Handling errors, retries, or rate limits | `https://raw.githubusercontent.com/[org]/[repo]/[branch]/[your-api]-best-practices/shared/error-codes.md` |
-| Multi-step workflows or lifecycle patterns | `https://raw.githubusercontent.com/[org]/[repo]/[branch]/[your-api]-best-practices/shared/workflows.md` |
-
-## When to Load Which File
-
-- **Auth setup** → fetch `shared/authentication.md` URL above
-- **Error codes, retry logic** → fetch `shared/error-codes.md` URL above
-- **Multi-step workflows** → fetch `shared/workflows.md` URL above
-- **Any endpoint** → fetch the matching URL from the table above
-
-[IF DEPLOYMENT_TARGET = code — use relative paths:]
-
-## What Are You Building?
-
-| Building... | Load this file |
+| Building... | Read this file |
 |---|---|
 | [Developer goal 1] | `endpoints/[file].md` |
 | [Developer goal 2] | `endpoints/[file].md` |
@@ -331,12 +338,10 @@ Validates and guides [Your API] integrations. Paste a request, code snippet, or 
 
 ## When to Load Which File
 
-- **Auth setup** → load `shared/authentication.md`
-- **Error codes, retry logic** → load `shared/error-codes.md`
-- **Multi-step workflows** → load `shared/workflows.md`
-- **Any endpoint** → load the matching file from the table above
-
-[END BRANCH]
+- **Auth setup** → read `shared/authentication.md`
+- **Error codes, retry logic** → read `shared/error-codes.md`
+- **Multi-step workflows** → read `shared/workflows.md`
+- **Any endpoint** → read the matching file from the table above
 
 Validate a **single request (curl/JSON)** → check request structure only.
 Validate **full code** → check request + error handling + retries + timeouts.
@@ -696,6 +701,20 @@ Write all files directly to disk:
 6. Write every endpoint file into `endpoints/`
 7. Confirm with a file listing and total count
 
+**If DEPLOYMENT_TARGET = claude_ai**, after writing the files, also create a zip bundle:
+
+```bash
+cd [your-api]-best-practices && zip -r ../[your-api]-best-practices.skill . && cd ..
+```
+
+Then tell the user:
+
+```
+Upload [your-api]-best-practices.skill to your Claude.ai Project.
+The .skill file is a zip bundle — it must contain SKILL.md inside the folder.
+All [N] files are included.
+```
+
 ---
 
 **If no file-writing tools are available (e.g., running in Claude.ai):**
@@ -704,9 +723,11 @@ Present every file in the chat in this exact order and format:
 
 ```
 I've created [N] files for your [API Name] best practices skill.
-Copy each file's content into the correct path to set up the skill.
+Copy each file's content and upload all [N] files to your Claude.ai Project —
+not just SKILL.md. Claude.ai resolves the endpoint and shared files from
+the Project's knowledge base using the relative paths in SKILL.md.
 
-Directory structure:
+Directory structure to recreate:
 [your-api]-best-practices/
   SKILL.md
   shared/
@@ -759,7 +780,7 @@ Then output each file as a clearly labelled block, in this order: SKILL.md first
 - Always show the main `SKILL.md` first, then shared files, then endpoint files in order
 - Include the full file path as the label so the user knows exactly where to save it
 - Report placeholder leakage count before listing files: "0 placeholder leaks found" or "Fixed N placeholder leaks"
-- End with: "All [N] files above. Create the directory structure and copy each file to its path."
+- End with: "All [N] files above. Save each file to the directory structure shown, then run `zip -r [your-api]-best-practices.skill [your-api]-best-practices/` and upload the .skill file to your Claude.ai Project."
 
 ---
 

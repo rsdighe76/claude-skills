@@ -122,7 +122,25 @@ Parse the spec to extract:
 - Pagination style from response schemas
 - All endpoints from `paths`
 
-**Phase 2: Enrich from public documentation (if available)**
+**Phase 2: Confirm web search before proceeding**
+
+Before searching the web, ask the user:
+
+```
+I've extracted what I can from your spec. To pre-fill additional fields
+(rate limits, retry guidance, idempotency details, etc.) I can search
+[API Name]'s public developer documentation.
+
+May I search the web for public docs? (yes / no / tell me which URLs first)
+```
+
+**[WAIT FOR USER RESPONSE]**
+
+- If **no** — skip to Phase 3, leave web-sourced fields blank
+- If **yes** — proceed with web search below
+- If **tell me which URLs first** — list the URLs you plan to search, wait for confirmation, then search
+
+**Phase 2b: Enrich from public documentation**
 
 Search the web for the API's public developer documentation to pre-fill additional details. Look for:
 - Rate limit documentation (requests per minute, burst limits, rate limit headers)

@@ -341,7 +341,7 @@ Create the output directory in the user's current working directory (or ask the 
 
 **Filename convention for path parameters:** strip curly braces from parameter names in filenames. `GET /v1/customers/{customer_id}` → `GET-v1-customers-customer_id.md`. Curly braces are invalid characters in zip/skill bundles on some platforms.
 
-**Before delivering any file, verify SKILL.md starts with `---` on line 1** — no blank lines or text before it. Claude.ai will reject the upload otherwise.
+**Before delivering any file, verify SKILL.md starts with `---` on line 1.** Read back the first line after writing. If it is not exactly `---` — if it starts with a blank line, introductory text, or a ` ``` ` fence — rewrite the file with `---` as the first characters. Claude.ai rejects the upload with "SKILL.md must start with YAML frontmatter" otherwise.
 
 **Before delivering any file, scan every generated file for placeholder leakage.** Search for all of the following strings and replace with the user's actual values from their spec or intake:
 
@@ -360,7 +360,10 @@ After replacing, report to the user: **"0 placeholder leaks found"** or **"Fixed
 
 It is a routing hub — not a manual. If you find yourself writing a paragraph here, it belongs in a reference file instead.
 
-**CRITICAL — frontmatter rule:** The very first characters of SKILL.md must be `---` on line 1 with nothing before it — no blank lines, no introductory text, no BOM. Claude.ai rejects the file with "SKILL.md must start with YAML frontmatter" if anything precedes the opening `---`. When writing this file, output the `---` as the absolute first thing.
+**CRITICAL — frontmatter rule:**
+- The file content begins with `---` on line 1. Nothing before it — no blank lines, no introductory sentence, no ```markdown fence, no BOM.
+- The template below is shown inside a code block for readability only. When writing the file, do NOT include the opening ` ```markdown ` or closing ` ``` ` markers — write only the content inside them.
+- After writing SKILL.md, read back line 1 and confirm it is exactly `---`. If it is not, rewrite the file.
 
 ```markdown
 ---

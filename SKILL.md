@@ -56,6 +56,12 @@ A best practice skill for your API covering:
 
 ## Implementation Process
 
+### Web Search Rule
+
+**Never search the web without explicit user approval.** At any point in this skill where a web search could occur, you must first show the user a numbered list of the URLs you plan to fetch and wait for them to select which ones to proceed with. Do not fetch any URL — including during intake template generation — until the user has responded with their selection.
+
+---
+
 ### Core Principle: Authoritative, Deterministic Best Practices
 
 **The skill you create will be the single source of truth for your API's best practices.**
@@ -122,28 +128,27 @@ Parse the spec to extract:
 - Pagination style from response schemas
 - All endpoints from `paths`
 
-**Phase 2: Show planned URLs and let user choose**
+**Phase 2: Show planned URLs and wait for user selection — DO NOT search yet**
 
-Before searching the web, determine which URLs you would search based on the API name and spec (e.g. the API's developer docs, rate limit reference, error code pages). Then present the list to the user:
+Based on the API name and spec, determine which public URLs you would search. Present the numbered list to the user and STOP. Do not fetch any URL until the user replies.
 
 ```
-I can search the following public URLs to pre-fill additional fields
-(rate limits, retry guidance, idempotency details, etc.):
+Before I search the web, here are the URLs I plan to check:
 
 1. [URL] — rate limits and throttling docs
 2. [URL] — error code reference
 3. [URL] — authentication and token guide
 ...
 
-Reply with:
-- "all" to search all of them
-- "none" to skip web search entirely
-- specific numbers (e.g. "1, 3") to search only those
+Which would you like me to search?
+- "all" — search all of them
+- "none" — skip web search, I'll fill in the blanks myself
+- numbers (e.g. "1, 3") — search only those
 ```
 
-**[WAIT FOR USER RESPONSE]**
+**STOP HERE. Do not fetch any URL. Do not proceed to Phase 2b. Do not generate the template. Wait for the user to reply with their selection before doing anything else.**
 
-Only fetch the URLs the user approved. Skip the rest and leave those fields blank in the template.
+Once the user replies, fetch only the URLs they selected. Leave all other web-sourced fields blank.
 
 **Phase 2b: Enrich from approved URLs**
 

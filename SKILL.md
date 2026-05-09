@@ -323,7 +323,7 @@ After replacing, report to the user: **"0 placeholder leaks found"** or **"Fixed
 
 **File 1: SKILL.md (Main Orchestrator)**
 
-Keep this file under 150 lines. It is a routing hub — not a manual. If you find yourself writing a paragraph here, it belongs in a reference file instead.
+It is a routing hub — not a manual. If you find yourself writing a paragraph here, it belongs in a reference file instead.
 
 **CRITICAL — frontmatter rule:** The very first characters of SKILL.md must be `---` on line 1 with nothing before it — no blank lines, no introductory text, no BOM. Claude.ai rejects the file with "SKILL.md must start with YAML frontmatter" if anything precedes the opening `---`. When writing this file, output the `---` as the absolute first thing.
 

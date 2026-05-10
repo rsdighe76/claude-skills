@@ -21,7 +21,7 @@ To get started I need your OpenAPI or Swagger spec. Choose one of three paths:
 Paste or link your spec and say "generate an intake template." I'll pre-fill a template with your actual endpoints, auth method, and error format — you just fill in the gaps.
 
 **Option B — Fill out the template manually**
-Download the [Intake Template](https://github.com/rsdighe76/claude-skills/blob/master/INTAKE-TEMPLATE.md) and paste it back with your spec.
+Download the [Intake Template](https://github.com/rsdighe76/api-skill-creator/blob/master/INTAKE-TEMPLATE.md) and paste it back with your spec.
 
 **Option C — Just give me the spec**
 Share your spec and I'll ask questions as we go — no prep needed.
@@ -97,7 +97,7 @@ This is the easiest path — you see your real endpoints listed out and just fil
 
 **Option B: Fill out the generic intake template manually**
 
-If you'd prefer to work offline, fill out the [Intake Template](https://github.com/rsdighe76/claude-skills/blob/master/INTAKE-TEMPLATE.md) with your API details and paste it along with your spec. See the [Intake Example](https://github.com/rsdighe76/claude-skills/blob/master/INTAKE-EXAMPLE.md) for a completed version.
+If you'd prefer to work offline, fill out the [Intake Template](https://github.com/rsdighe76/api-skill-creator/blob/master/INTAKE-TEMPLATE.md) with your API details and paste it along with your spec. See the [Intake Example](https://github.com/rsdighe76/api-skill-creator/blob/master/INTAKE-EXAMPLE.md) for a completed version.
 
 **Option C: Just provide the spec — I'll ask questions as we go**
 

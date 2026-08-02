@@ -782,7 +782,7 @@ Then tell the user:
 
 ```
 Upload [your-api]-best-practices.skill to your Claude.ai Project.
-The .skill file is a zip bundle — it must contain SKILL.md inside the folder.
+The .skill file is a zip bundle with SKILL.md at the root (not inside a subfolder).
 All [N] files are included.
 ```
 
@@ -851,7 +851,7 @@ Then output each file as a clearly labelled block, in this order: SKILL.md first
 - Always show the main `SKILL.md` first, then shared files, then endpoint files in order
 - Include the full file path as the label so the user knows exactly where to save it
 - Report placeholder leakage count before listing files: "0 placeholder leaks found" or "Fixed N placeholder leaks"
-- End with: "All [N] files above. Save each file to the directory structure shown, then run `zip -r [your-api]-best-practices.skill [your-api]-best-practices/` and upload the .skill file to your Claude.ai Project."
+- End with: "All [N] files above. Save each file to the directory structure shown, then run `cd [your-api]-best-practices && zip -r ../[your-api]-best-practices.skill . && cd ..` and upload the .skill file to your Claude.ai Project."
 
 ---
 
